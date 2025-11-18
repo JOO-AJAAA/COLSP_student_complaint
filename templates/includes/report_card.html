@@ -1,0 +1,93 @@
+<div class="report-card">
+  <form id="reportForm">
+    <div class="mb-3">
+      <label class="form-label"
+        >Report Type <span class="required-mark">*</span></label
+      >
+      <div class="radio-group">
+        <div class="radio-option">
+          <input
+            type="radio"
+            id="complaint"
+            name="reportType"
+            value="complaint"
+            required
+          />
+          <label class="radio-label" for="complaint">
+            <i class="fas fa-exclamation-circle"></i> Complaint
+          </label>
+        </div>
+        <div class="radio-option">
+          <input
+            type="radio"
+            id="suggestion"
+            name="reportType"
+            value="suggestion"
+          />
+          <label class="radio-label" for="suggestion">
+            <i class="fas fa-lightbulb"></i> Suggestion
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label for="category" class="form-label"
+        >Report Category <span class="required-mark">*</span></label
+      >
+      <select class="form-select" id="category" required>
+        <option value="">Select a category</option>
+        <option value="academic">Academic</option>
+        <option value="facilities">Facilities</option>
+        <option value="finance">Finance</option>
+        <option value="others">Others</option>
+      </select>
+    </div>
+
+    <div class="mb-3">
+      <label for="title" class="form-label"
+        >Report Title <span class="required-mark">*</span></label
+      >
+      <input
+        type="text"
+        class="form-control"
+        id="title"
+        placeholder="e.g., Projector in Room 301 is Broken"
+        required
+      />
+    </div>
+
+    <div class="mb-3">
+      <label for="description" class="form-label"
+        >Report Description <span class="required-mark">*</span></label
+      >
+      <textarea
+        class="form-control"
+        id="description"
+        rows="6"
+        placeholder="Please describe your complaint or suggestion in detail. This will help us understand and address your concern better."
+        required
+      ></textarea>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Attachments (Optional)</label>
+      <div class="file-upload">
+        <input
+          type="file"
+          id="attachment"
+          accept="image/*,.pdf,.doc,.docx"
+          multiple
+        />
+        <label class="file-upload-label" for="attachment">
+          <i class="fas fa-cloud-upload-alt fa-2x"></i>
+          <span>Click to upload files or drag and drop</span>
+        </label>
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-submit">
+      <i class="fas fa-paper-plane"></i> Submit Report
+    </button>
+  </form>
+</div>
