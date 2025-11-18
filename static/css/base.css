@@ -38,8 +38,8 @@ body {
 }
 
 .navbar {
-  background: var(--bg-card);
-  border-bottom: 1px solid var(--border);
+  background: transparent;
+  border-bottom: none;
   padding: 1rem 0;
   position: sticky;
   top: 0;
@@ -294,4 +294,75 @@ textarea.form-control {
 
 .mb-3 {
   margin-bottom: 1.5rem !important;
+}
+
+/* Right fixed icon-only sidebar */
+.right-sidebar {
+  position: fixed;
+  right: 0;
+  top: 0;
+  height: 100vh;
+  width: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1050;
+  pointer-events: auto;
+}
+
+.right-nav {
+  background: var(--bg-card);
+  border-radius: 12px 0 0 12px;
+  width: 56px;
+  height: calc(100vh - 32px);
+  margin: 16px 8px;
+  padding: 12px 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+}
+
+.right-nav .nav-item {
+  color: var(--text-secondary);
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  text-decoration: none;
+  transition: background-color 120ms ease, color 120ms ease,
+    transform 120ms ease;
+}
+
+.right-nav .nav-item + .nav-item {
+  margin-top: 10px;
+}
+
+.right-nav .nav-item:hover {
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-primary);
+  transform: translateY(-3px);
+}
+
+.right-nav .nav-item.active {
+  background: var(--accent);
+  color: white;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+}
+
+.right-nav .nav-spacer {
+  flex: 1 1 auto;
+}
+
+/* brief visual click effect on icons (very fast) */
+.right-nav .nav-item.nav-click {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+@media (max-width: 900px) {
+  .right-sidebar {
+    display: none;
+  }
 }

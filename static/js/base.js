@@ -46,3 +46,39 @@ document.getElementById("reportForm").addEventListener("submit", (e) => {
     "Report submitted successfully! (This is a demo - backend integration pending)"
   );
 });
+
+// Sidebar navigation: active state + quick click animation
+(function () {
+  const navItems = document.querySelectorAll(".right-nav .nav-item");
+  if (!navItems || !navItems.length) return;
+
+  // Set active based on current path (simple match)
+  const path = window.location.pathname;
+  navItems.forEach((a) => {
+    try {
+      const href = a.getAttribute("href");
+      if (href && (href === path || (href !== "/" && path.startsWith(href)))) {
+        a.classList.add("active");
+      }
+    } catch (e) {
+      /* ignore */
+    }
+  });
+
+  navItems.forEach((a) => {
+    a.addEventListener("click", (ev) => {
+      // quick visual feedback before navigation
+      ev.preventDefault();
+      navItems.forEach((n) => n.classList.remove("active"));
+      a.classList.add("active");
+      a.classList.add("nav-click");
+      setTimeout(() => a.classList.remove("nav-click"), 160);
+
+      const target = a.getAttribute("href");
+      // short delay so animation is perceptible but fast
+      setTimeout(() => {
+        if (target) window.location.href = target;
+      }, 140);
+    });
+  });
+})();
