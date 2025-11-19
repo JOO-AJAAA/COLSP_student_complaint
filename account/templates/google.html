@@ -1,0 +1,14 @@
+<form action="{% provider_login_url 'google' %}" method="post">
+  {% csrf_token %}
+  <button
+    type="submit"
+    class="btn btn-light border w-100 d-flex align-items-center justify-content-center mb-3"
+  >
+    <img
+      src="https://developers.google.com/identity/images/g-logo.png"
+      alt="Google"
+      style="width: 20px; margin-right: 10px"
+    />
+    <span>Continue with Google</span>
+  </button>
+</form>
