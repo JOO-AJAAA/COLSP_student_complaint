@@ -4,15 +4,15 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.models import User
 from django.views.decorators.http import require_POST
 from .utils import create_guest_account, send_otp_email
-from .models import OTPRequest,Profile
+from .models import OTPRequest
 from django.views.decorators.csrf import csrf_exempt
-
 # Create your views here.
 def guest_login_view(request):
     user = create_guest_account()
     # Login backend force (bypass password check)
     login(request, user, backend='django.contrib.auth.backends.ModelBackend')
-    return redirect('home') # Ganti dengan nama url home Anda
+    # Redirect to main index (if your index URL name differs, change accordingly)
+    return redirect('index')
 
 
 @csrf_exempt

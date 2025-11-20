@@ -393,6 +393,7 @@ textarea.form-control {
   width: min(420px, 90%);
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
   text-align: center;
+  position: relative; /* ensure absolute children like .auth-close are positioned inside */
 }
 .auth-close {
   position: absolute;

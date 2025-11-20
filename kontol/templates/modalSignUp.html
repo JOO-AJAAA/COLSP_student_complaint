@@ -6,28 +6,29 @@
     </button>
     <h3>Welcome to COLSP</h3>
     <p>Sign up or log in to personalize your experience.</p>
-    <div style="display: flex; gap: 0.5rem; margin-top: 1rem">
+    <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 1rem;">
       {%include 'signUp_signIn.html'%}
     </div>
   </div>
 </div>
 <script>
-
   (function () {
     // Call guest-login API when user closes the modal or clicks guest button
     function doGuestLogin() {
       fetch("/api/guest-login/", {
         method: "POST",
+        credentials: "same-origin",
         headers: {
           "X-Requested-With": "XMLHttpRequest",
           "X-CSRFToken": "{{ csrf_token }}",
           "Content-Type": "application/json",
         },
+        body: JSON.stringify({}),
       })
         .then((r) => r.json())
         .then((data) => {
-          if (data.status === "success") location.reload();
-          else location.reload();
+          // reload to reflect logged-in state
+          location.reload();
         })
         .catch(() => location.reload());
     }
