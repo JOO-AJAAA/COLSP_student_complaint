@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120">
+  <rect width="120" height="120" rx="16" fill="#fff7e6"/>
+  <circle cx="60" cy="58" r="28" fill="#fffef5" />
+  <text x="60" y="70" font-size="16" text-anchor="middle" fill="#b36a00" font-family="Arial">Bebek</text>
+</svg>

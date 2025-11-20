@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120">
+  <rect width="120" height="120" rx="16" fill="#f5d0c5"/>
+  <circle cx="60" cy="55" r="28" fill="#fff3f0" />
+  <text x="60" y="68" font-size="18" text-anchor="middle" fill="#5a3b3b" font-family="Arial">Kucing</text>
+</svg>
