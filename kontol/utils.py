@@ -22,10 +22,24 @@ def create_guest_account():
     # Buat User Guest
     user = User.objects.create_user(username=username)
     user.set_unusable_password() # Tidak butuh password
-    
-    # Buat Profile
-    Profile.objects.create(user=user, is_guest=True, avatar_animal=animal)
-    
+    user.save()
+    # A Profile may be created by a post_save signal. Use get_or_create to
+    # avoid IntegrityError from duplicate creation.
+    try:
+        profile, created = Profile.objects.get_or_create(user=user)
+        profile.is_guest = True
+        profile.avatar_animal = animal
+        profile.save()
+    except Exception:
+        # fallback: try to update if profile exists
+        try:
+            p = user.profile
+            p.is_guest = True
+            p.avatar_animal = animal
+            p.save()
+        except Exception:
+            pass
+
     return user
 
 def send_otp_email(email):

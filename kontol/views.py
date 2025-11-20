@@ -25,6 +25,11 @@ def guest_login_api(request):
     try:
         user = create_guest_account()
         login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+        # Ensure session is saved so the session cookie is set in response
+        try:
+            request.session.save()
+        except Exception:
+            pass
         avatar = getattr(user.profile, 'avatar_animal', '')
         return JsonResponse({'status': 'success', 'username': user.username, 'avatar': avatar})
     except Exception as e:

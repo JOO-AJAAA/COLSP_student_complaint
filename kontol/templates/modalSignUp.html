@@ -6,7 +6,9 @@
     </button>
     <h3>Welcome to COLSP</h3>
     <p>Sign up or log in to personalize your experience.</p>
-    <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 1rem;">
+    <div
+      style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 1rem"
+    >
       {%include 'signUp_signIn.html'%}
     </div>
   </div>
@@ -27,10 +29,19 @@
       })
         .then((r) => r.json())
         .then((data) => {
-          // reload to reflect logged-in state
+          console.log("guest-login response", data);
+          if (data && data.status === "success") {
+            // redirect to root so templates render authenticated sidebar
+            window.location.href = "/";
+            return;
+          }
+          // fallback reload
           location.reload();
         })
-        .catch(() => location.reload());
+        .catch((err) => {
+          console.error("guest-login error", err);
+          location.reload();
+        });
     }
 
     document.addEventListener("DOMContentLoaded", function () {
