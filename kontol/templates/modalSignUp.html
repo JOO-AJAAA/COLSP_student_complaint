@@ -1,0 +1,43 @@
+{% if not user.is_authenticated %}
+<div id="auth-overlay" class="auth-overlay" aria-hidden="false">
+  <div class="auth-modal">
+    <button id="auth-close" class="auth-close" aria-label="Close">
+      &times;
+    </button>
+    <h3>Welcome to COLSP</h3>
+    <p>Sign up or log in to personalize your experience.</p>
+    <div style="display: flex; gap: 0.5rem; margin-top: 1rem">
+      {%include 'signUp_signIn.html'%}
+    </div>
+  </div>
+</div>
+<script>
+
+  (function () {
+    // Call guest-login API when user closes the modal or clicks guest button
+    function doGuestLogin() {
+      fetch("/api/guest-login/", {
+        method: "POST",
+        headers: {
+          "X-Requested-With": "XMLHttpRequest",
+          "X-CSRFToken": "{{ csrf_token }}",
+          "Content-Type": "application/json",
+        },
+      })
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.status === "success") location.reload();
+          else location.reload();
+        })
+        .catch(() => location.reload());
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+      var closeBtn = document.getElementById("auth-close");
+      var guestBtn = document.getElementById("guest-btn");
+      closeBtn && closeBtn.addEventListener("click", doGuestLogin);
+      guestBtn && guestBtn.addEventListener("click", doGuestLogin);
+    });
+  })();
+</script>
+{% endif %}

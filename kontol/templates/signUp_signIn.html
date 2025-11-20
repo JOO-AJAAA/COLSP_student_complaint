@@ -1,3 +1,5 @@
+{% load socialaccount %}
+
 <form action="{% provider_login_url 'google' %}" method="post">
   {% csrf_token %}
   <button
@@ -12,3 +14,5 @@
     <span>Continue with Google</span>
   </button>
 </form>
+<button id="guest-btn" class="btn btn-signup">Continue as Guest</button>
+

@@ -1,4 +1,3 @@
-{% load socialaccount %}
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -9,58 +8,19 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css"
       rel="stylesheet"
     />
+
     <link
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
       rel="stylesheet"
     />
+
     {% block style_page%}{% endblock %}
+
   </head>
   <body data-theme="dark">
     {% include 'includes/sidebar.html' %}
     {# ChatGPT-style auth modal: shown only for anonymous users #}
-    {% if not user.is_authenticated %}
-    <div id="auth-overlay" class="auth-overlay" aria-hidden="false">
-      <div class="auth-modal">
-        <button id="auth-close" class="auth-close" aria-label="Close">
-          &times;
-        </button>
-        <h3>Welcome to COLSP</h3>
-        <p>Sign up or log in to personalize your experience.</p>
-        <div style="display: flex; gap: 0.5rem; margin-top: 1rem">
-          <a href="{% provider_login_url 'google' %}" class="btn btn-signup"
-            >Continue with Google</a
-          >
-          <button id="guest-btn" class="btn btn-signup">
-            Continue as Guest
-          </button>
-        </div>
-      </div>
-    </div>
-    <script>
-      (function () {
-        // Call guest-login API when user closes the modal or clicks guest button
-        function doGuestLogin() {
-          fetch("/api/guest-login/", {
-            method: "POST",
-            headers: { "X-Requested-With": "XMLHttpRequest" },
-          })
-            .then((r) => r.json())
-            .then((data) => {
-              if (data.status === "success") location.reload();
-              else location.reload();
-            })
-            .catch(() => location.reload());
-        }
-
-        document.addEventListener("DOMContentLoaded", function () {
-          var closeBtn = document.getElementById("auth-close");
-          var guestBtn = document.getElementById("guest-btn");
-          closeBtn && closeBtn.addEventListener("click", doGuestLogin);
-          guestBtn && guestBtn.addEventListener("click", doGuestLogin);
-        });
-      })();
-    </script>
-    {% endif %}
+    {%include 'modalSignUp.html'%}
     {% block content %} {% endblock %}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
     {% block logic_script_page%}{% endblock %}
