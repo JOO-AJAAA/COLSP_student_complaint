@@ -22,5 +22,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.index, name='index'),
     # Include account API endpoints under /api/
-    path('api/', include('account.urls')),
+    path('api/', include('kontol.urls')),
 ]

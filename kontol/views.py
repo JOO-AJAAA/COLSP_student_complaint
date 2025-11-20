@@ -6,6 +6,7 @@ from django.views.decorators.http import require_POST
 from .utils import create_guest_account, send_otp_email
 from .models import OTPRequest
 from django.views.decorators.csrf import csrf_exempt
+
 # Create your views here.
 def guest_login_view(request):
     user = create_guest_account()

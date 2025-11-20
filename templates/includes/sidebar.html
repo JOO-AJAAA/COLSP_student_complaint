@@ -25,8 +25,8 @@
 
     <div class="nav-spacer"></div>
 
-    {# Dynamic profile avatar: show image when user is authenticated #} {% if
-    user.is_authenticated %}
+    {# Dynamic profile avatar: show image when user is authenticated #}
+    {% if user.is_authenticated %}
     <a
       href="/profile/"
       class="nav-item mb-3"
@@ -39,8 +39,9 @@
         alt="Avatar"
         class="profile-avatar"
       />
-      {% else %} {# fall back to social avatar if available, otherwise show icon
-      #} {% if user.socialaccount_set.count %}
+      {% else %}
+      {# fall back to social avatar if available, otherwise show icon #}
+      {% if user.socialaccount_set.count %}
       <img
         src="{{ user.socialaccount_set.all.0.get_avatar_url }}"
         alt="Profile"

@@ -1,7 +1,7 @@
 from django.urls import path
 from . import views
 
-app_name = 'account'
+app_name = 'kontol'
 
 urlpatterns = [
 	# API endpoint for creating a guest account (called via AJAX)
