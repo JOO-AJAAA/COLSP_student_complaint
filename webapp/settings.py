@@ -140,8 +140,17 @@ SOCIALACCOUNT_PROVIDERS = {
         'APP': {
             'client_id': os.getenv('client_id'),
             'secret': os.getenv('secret'),
-            'key': os.getenv('key')
-        }
+            'key': os.getenv('key'),
+        },
+        'AUTH_PARAMS': {
+            'access_type': 'online',
+            'prompt': 'select_account',
+        },
+        
+        'SCOPE': [
+            'profile',
+            'email',
+        ],
     }
 }
 

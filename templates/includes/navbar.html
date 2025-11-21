@@ -9,5 +9,17 @@
     >
       <span class="navbar-toggler-icon"></span>
     </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <div class="ms-auto d-flex align-items-center">
+        <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+          <i class="fas fa-moon" id="themeIcon"></i>
+        </button>
+        {% if user.is_authenticated %}
+        <h6 title="{{user.username}}" class="theme-indicator ms-2" id="themeIndicator">
+          {{ user.username|truncatechars:12 }}
+        </h6>
+        {% endif %}
+      </div>
+    </div>
   </div>
 </nav>
