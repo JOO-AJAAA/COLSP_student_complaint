@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'kontol.apps.KontolConfig',
     'reports.apps.ReportsConfig',
+    'chatbot_faq.apps.ChatbotFaqConfig',
     
     # django-allauth
     "django.contrib.sites",
