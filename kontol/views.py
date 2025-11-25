@@ -43,8 +43,11 @@ def request_otp_view(request):
         return JsonResponse({'status': 'error', 'message': 'Email wajib diisi'})
     
     try:
-        send_otp_email(email)
-        return JsonResponse({'status': 'success', 'message': 'OTP terkirim ke email Anda'})
+        ok = send_otp_email(email)
+        if ok:
+            return JsonResponse({'status': 'success', 'message': 'OTP terkirim ke email Anda'})
+        else:
+            return JsonResponse({'status': 'error', 'message': 'Gagal mengirim email. Periksa konfigurasi email server.'})
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': 'Gagal mengirim email'})
 
@@ -78,12 +81,23 @@ def verify_otp_view(request):
         # Contoh:
         # Report.objects.filter(author=current_user).update(author=existing_user)
         
-        # 1. Logout Guest
+        # 1. Transfer guest's reports to the existing user before removing the guest
+        try:
+            from reports.models import Report
+            if current_user and current_user.is_authenticated:
+                Report.objects.filter(author=current_user).update(author=existing_user)
+        except Exception:
+            pass
+
+        # 2. Logout Guest
         logout(request)
         
-        # 2. Hapus Akun Guest (Cleanup)
-        if current_user.is_authenticated and current_user.profile.is_guest:
-             current_user.delete() 
+        # 3. Hapus Akun Guest (Cleanup)
+        try:
+            if current_user.is_authenticated and getattr(current_user, 'profile', None) and current_user.profile.is_guest:
+                current_user.delete()
+        except Exception:
+            pass
 
         # 3. Login Existing User
         login(request, existing_user, backend='django.contrib.auth.backends.ModelBackend')

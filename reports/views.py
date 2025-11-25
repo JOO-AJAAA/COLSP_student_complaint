@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
-from .models import Report
+from .models import Report,Reaction
 from .utils import (
     detect_gambling_probability, 
     detect_toxicity_probability, 
@@ -14,10 +14,66 @@ from .gemini_utils import generate_report_metadata
 # Create your views here.
 
 def reports(request):
-    # List recent reports for index view
-    qs = Report.objects.select_related('author').all()
-    return render(request, 'reports/indexForReports.html', {'reports_list': qs})
+    # 1. OPTIMASI DATABASE
+    # Tambahkan 'prefetch_related' untuk 'reactions'. 
+    # Ini mengambil semua reaksi sekaligus, jadi jauh lebih cepat.
+    qs = Report.objects.select_related('author').prefetch_related('reactions').all()
 
+    # Import SocialAccount dengan aman
+    try:
+        from allauth.socialaccount.models import SocialAccount
+    except ImportError:
+        SocialAccount = None
+
+    reports_list = []
+    
+    for r in qs:
+        # --- LOGIKA AVATAR (Kode Anda Sebelumnya) ---
+        author_name = r.author.get_full_name() or r.author.username
+        avatar_url = ''
+        
+        # Cek Profile (Guest)
+        try:
+            prof = getattr(r.author, 'profile', None)
+            if prof and getattr(prof, 'avatar_animal', None):
+                avatar_url = f"/static/account/img/{prof.avatar_animal}.svg"
+        except Exception:
+            pass
+
+        # Cek Social Account (Google)
+        if not avatar_url and SocialAccount:
+            sa = SocialAccount.objects.filter(user=r.author).first()
+            if sa:
+                extra = getattr(sa, 'extra_data', {}) or {}
+                avatar_url = extra.get('picture') or extra.get('avatar_url') or ''
+
+        # Pasang atribut Avatar & Nama
+        setattr(r, 'author_display_name', author_name)
+        setattr(r, 'author_avatar_url', avatar_url)
+
+        # --- LOGIKA MENGHITUNG REACTION (INI YANG KURANG) ---
+        # Kita hitung manual menggunakan Python list comprehension
+        # karena datanya sudah di-prefetch (ada di memori), ini sangat cepat.
+        
+        all_reactions = r.reactions.all() # Mengambil dari cache prefetch
+        
+        # Hitung jumlah per tipe
+        agree_c = sum(1 for x in all_reactions if x.type == 'agree')
+        support_c = sum(1 for x in all_reactions if x.type == 'support')
+        sad_c = sum(1 for x in all_reactions if x.type == 'sad')
+        shock_c = sum(1 for x in all_reactions if x.type == 'shock')
+        confused_c = sum(1 for x in all_reactions if x.type == 'confused')
+
+        # Tempelkan hasil hitungan ke objek report agar bisa dibaca template
+        setattr(r, 'custom_agree_count', agree_c)
+        setattr(r, 'custom_support_count', support_c)
+        setattr(r, 'custom_sad_count', sad_c)
+        setattr(r, 'custom_shock_count', shock_c)
+        setattr(r, 'custom_confused_count', confused_c)
+        # Masukkan ke list final
+        reports_list.append(r)
+
+    return render(request, 'reports/indexForReports.html', {'reports_list': reports_list})
 # Import your Gemini wrapper here
 # from .gemini_utils import generate_ai_summary 
 
