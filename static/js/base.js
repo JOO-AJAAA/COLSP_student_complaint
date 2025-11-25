@@ -2,12 +2,9 @@ if (window.__colsp_base_js_loaded) {
   console.warn("base.js already loaded — skipping duplicate execution");
 } else {
   window.__colsp_base_js_loaded = true;
+
   (function () {
     "use strict";
-
-    const themeToggle = document.getElementById("themeToggle");
-    const themeIcon = document.getElementById("themeIcon");
-    const body = document.body;
 
     // --- 1. CSRF Helper ---
     function getCookie(name) {
@@ -31,6 +28,10 @@ if (window.__colsp_base_js_loaded) {
     }
 
     // --- 2. Theme Logic ---
+    const themeToggle = document.getElementById("themeToggle");
+    const themeIcon = document.getElementById("themeIcon");
+    const body = document.body;
+
     if (themeToggle) {
       themeToggle.addEventListener("click", () => {
         const currentTheme = body.getAttribute("data-theme");
@@ -87,14 +88,14 @@ if (window.__colsp_base_js_loaded) {
         }
 
         // UI: loading state
-        submitBtn.disabled = true;
-        const origHtml = submitBtn.innerHTML;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
+        if(submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
+        }
 
         openReportModal();
         setReportModalStage("loading");
 
-        // Use the correct API Endpoint for submission
         fetch("/reports/api/submit/", {
           method: "POST",
           headers: {
@@ -105,49 +106,40 @@ if (window.__colsp_base_js_loaded) {
         })
           .then(async (res) => {
             const data = await res.json().catch(() => ({}));
+            
+            // Restore button
+            if(submitBtn) {
+                 submitBtn.disabled = false;
+                 submitBtn.innerHTML = "Submit Report";
+            }
 
-            // Handle Rejected (400)
             if (res.status === 400) {
-              const message = data && data.message ? data.message : "Submission rejected.";
-              setReportModalStage("error", { message, details: data });
-              submitBtn.disabled = false;
-              submitBtn.innerHTML = origHtml;
+              setReportModalStage("error", { message: data.message || "Submission rejected." });
               return;
             }
-
-            // Handle Server Error (500)
             if (res.status === 500) {
-              const message = data && data.message ? data.message : "Server error.";
-              setReportModalStage("error", { message, details: data });
-              submitBtn.disabled = false;
-              submitBtn.innerHTML = origHtml;
+              setReportModalStage("error", { message: data.message || "Server error." });
               return;
             }
-
-            // Handle Success
             if (res.ok) {
-              const successMsg = data && data.message ? data.message : "Report sent!";
               setReportModalStage("success", {
-                message: successMsg,
-                redirect: data && data.redirect_url,
+                message: data.message || "Report sent!",
+                redirect: data.redirect_url,
               });
-
               setTimeout(() => {
                 window.location.href = data.redirect_url || "/reports/";
               }, 1400);
               return;
             }
-
-            // Fallback
             setReportModalStage("error", { message: "Unexpected response." });
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = origHtml;
           })
           .catch((err) => {
             console.error("submit error", err);
             setReportModalStage("error", { message: "Network error." });
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = origHtml;
+            if(submitBtn) {
+                 submitBtn.disabled = false;
+                 submitBtn.innerHTML = "Submit Report";
+            }
           });
       });
     }
@@ -204,69 +196,98 @@ if (window.__colsp_base_js_loaded) {
         resultContent.innerHTML = `<div class="alert alert-danger">${msg}</div>`;
       }
     }
-    // Expose needed helpers
-    window.openReportModal = openReportModal;
-    window.closeReportModal = closeReportModal;
-    window.setReportModalStage = setReportModalStage;
 
+    // --- 6. OTP LOGIC FUNCTIONS (Didefinisikan dulu biar tidak ReferenceError) ---
+    
+    function closeOtpModal() {
+      const m = document.getElementById("otp-modal");
+      if (m) m.parentElement.remove();
+    }
 
-    /* =========================================
-       6. REACTION LOGIC (PERBAIKAN UTAMA DISINI)
-       ========================================= */
-    window.submitReaction = function (reportId, emojiType, btnElement) {
-      const btn = typeof btnElement === "string" ? document.querySelector(btnElement) : btnElement;
+    function sendOtpCode() {
+      const emailEl = document.getElementById("otp-email");
+      if (!emailEl) return; // Safety check
       
-      // FIX 1: URL Dynamic yang Benar sesuai backend
-      const url = `/reports/api/reaction/${reportId}/`;
-
-      fetch(url, {
+      const email = emailEl.value;
+      if (!email) return alert("Email wajib diisi");
+      
+      const btn = document.getElementById("otp-send");
+      if(btn) {
+          btn.disabled = true;
+          btn.textContent = "Mengirim...";
+      }
+      
+      // URL: /api/kontol/request-otp/
+      fetch("/api/kontol/request-otp/", {
         method: "POST",
         headers: {
-          "Content-Type": "application/x-www-form-urlencoded", // FIX 2: Pakai Form Encoded
-          "X-Requested-With": "XMLHttpRequest",
+          "Content-Type": "application/x-www-form-urlencoded",
           "X-CSRFToken": csrftoken,
         },
-        // FIX 3: Kirim data dengan URLSearchParams agar terbaca request.POST di Django
-        body: new URLSearchParams({
-            'reaction_type': emojiType
-        })
+        body: `email=${encodeURIComponent(email)}`,
       })
-        .then(async (res) => {
+      .then(async (res) => {
           const data = await res.json().catch(() => ({}));
-          
-          // FIX 4: Tangkap status 403 Forbidden -> Trigger Modal
-          if (res.status === 403 && data.code === "guest_restriction") {
-            openOtpModal();
-            return;
+          if (res.ok && data.status === "success") {
+            const s1 = document.getElementById("otp-stage-1");
+            const s2 = document.getElementById("otp-stage-2");
+            if(s1) s1.style.display = "none";
+            if(s2) s2.style.display = "block";
+          } else {
+            alert(data.message || "Gagal mengirim OTP");
+            if(btn) { btn.disabled = false; btn.textContent = "Kirim Kode"; }
           }
-          
-          if (!res.ok) {
-            console.error("Reaction failed", data);
-            return;
-          }
+      })
+      .catch((err) => {
+          console.error(err);
+          alert("Network Error");
+          if(btn) { btn.disabled = false; btn.textContent = "Kirim Kode"; }
+      });
+    }
 
-          // Update counts in DOM
-          if (data && data.counts) {
-            Object.keys(data.counts).forEach((k) => {
-              const el = document.getElementById(`count-${k}-${reportId}`);
-              if (el) el.textContent = data.counts[k];
-            });
-             // Update Total if exists
-            const totalEl = document.getElementById(`count-total-${reportId}`);
-            if (totalEl && data.total_reactions !== undefined) {
-                totalEl.textContent = data.total_reactions;
-            }
-          }
-          // Toggle active style
-          if (btn) btn.classList.toggle("active");
-        })
-        .catch((err) => console.error("Reaction network error", err));
-    };
+    function verifyOtpCode() {
+      const emailEl = document.getElementById("otp-email");
+      const codeEl = document.getElementById("otp-code");
+      
+      if (!emailEl || !codeEl) return;
 
-    /* =========================================
-       7. OTP MODAL LOGIC (Sesuai Path '/api/kontol/')
-       ========================================= */
-    window.openOtpModal = function() {
+      const email = emailEl.value;
+      const code = codeEl.value;
+      
+      if (!code) return alert("Kode wajib diisi");
+      
+      const btn = document.getElementById("otp-verify");
+      if(btn) {
+          btn.disabled = true;
+          btn.textContent = "Memverifikasi...";
+      }
+      
+      // URL: /api/kontol/verify-otp/
+      fetch("/api/kontol/verify-otp/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          "X-CSRFToken": csrftoken,
+        },
+        body: `email=${encodeURIComponent(email)}&otp=${encodeURIComponent(code)}`,
+      })
+      .then(async (res) => {
+          const data = await res.json().catch(() => ({}));
+          if (res.ok && data.status === "success") {
+            closeOtpModal();
+            window.location.reload();
+          } else {
+            alert(data.message || "Kode Salah");
+            if(btn) { btn.disabled = false; btn.textContent = "Verifikasi"; }
+          }
+      })
+      .catch((err) => {
+          alert("Network Error");
+          if(btn) { btn.disabled = false; btn.textContent = "Verifikasi"; }
+      });
+    }
+
+    function openOtpModal() {
       if (document.getElementById("otp-modal")) return; 
       
       const modalHtml = `
@@ -274,19 +295,19 @@ if (window.__colsp_base_js_loaded) {
         <div class="modal-dialog modal-dialog-centered modal-sm">
           <div class="modal-content bg-dark text-white border-secondary">
             <div class="modal-header border-secondary">
-              <h5 class="modal-title">Guest Verification</h5>
+              <h5 class="modal-title">Verifikasi Akun</h5>
               <button type="button" class="btn-close btn-close-white" id="otp-close"></button>
             </div>
-            <div class="modal-body" id="otp-body">
+            <div class="modal-body">
               <div id="otp-stage-1">
-                <p class="small text-muted mb-3">Enter email to verify action.</p>
-                <input id="otp-email" class="form-control bg-secondary text-white border-0 mb-3" type="email" placeholder="you@example.com" />
-                <button id="otp-send" class="btn btn-success w-100">Send Code</button>
+                <p class="small text-muted">Masukkan email untuk verifikasi.</p>
+                <input id="otp-email" class="form-control bg-secondary text-white border-0 mb-3" type="email" placeholder="Email Anda" />
+                <button id="otp-send" class="btn btn-success w-100">Kirim Kode</button>
               </div>
               <div id="otp-stage-2" style="display:none;">
-                <p class="small text-success mb-3">Code sent to email.</p>
-                <input id="otp-code" class="form-control bg-secondary text-white border-0 mb-3" type="text" placeholder="6-digit code" style="text-align:center; letter-spacing: 3px;" />
-                <button id="otp-verify" class="btn btn-primary w-100">Verify</button>
+                <p class="small text-success">Kode terkirim ke email!</p>
+                <input id="otp-code" class="form-control bg-secondary text-white border-0 mb-3" type="text" placeholder="6 Digit Kode" style="text-align:center; letter-spacing:3px;"/>
+                <button id="otp-verify" class="btn btn-primary w-100">Verifikasi</button>
               </div>
             </div>
           </div>
@@ -297,88 +318,73 @@ if (window.__colsp_base_js_loaded) {
       wrapper.innerHTML = modalHtml;
       document.body.appendChild(wrapper);
 
+      // PASANG EVENT LISTENER (Sekarang aman karena fungsi sudah didefinisikan di atas)
       document.getElementById("otp-close").addEventListener("click", closeOtpModal);
       document.getElementById("otp-send").addEventListener("click", sendOtpCode);
       document.getElementById("otp-verify").addEventListener("click", verifyOtpCode);
     }
 
-    window.closeOtpModal = function() {
-      const m = document.getElementById("otp-modal");
-      if (m) m.parentElement.remove();
-    }
-
-    window.sendOtpCode = function() {
-      const email = document.getElementById("otp-email").value;
-      if (!email) return alert("Please enter your email");
-      const btn = document.getElementById("otp-send");
-      btn.disabled = true;
-      btn.textContent = "Sending...";
+    // --- 7. REACTION LOGIC ---
+    function submitReaction(reportId, emojiType, btnElement) {
+      const btn = typeof btnElement === "string" ? document.querySelector(btnElement) : btnElement;
       
-      // URL KHUSUS YANG ANDA MINTA
-      fetch("/api/kontol/request-otp/", {
+      // URL Report Reaction
+      const url = `/reports/api/reaction/${reportId}/`;
+
+      fetch(url, {
         method: "POST",
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
+          "X-Requested-With": "XMLHttpRequest",
           "X-CSRFToken": csrftoken,
         },
-        body: `email=${encodeURIComponent(email)}`,
+        body: new URLSearchParams({ 'reaction_type': emojiType })
       })
-        .then(async (res) => {
+      .then(async (res) => {
           const data = await res.json().catch(() => ({}));
-          if (res.ok && data.status === "success") {
-            document.getElementById("otp-stage-1").style.display = "none";
-            document.getElementById("otp-stage-2").style.display = "block";
-          } else {
-            alert(data.message || "Failed to send OTP");
-            btn.disabled = false;
-            btn.textContent = "Send Code";
+          
+          // HANDLE GUEST (403)
+          if (res.status === 403 && data.code === "guest_restriction") {
+            openOtpModal(); // Panggil fungsi lokal
+            return;
           }
-        })
-        .catch((err) => {
-          console.error(err);
-          alert("Network error");
-          btn.disabled = false;
-          btn.textContent = "Send Code";
-        });
+          
+          if (!res.ok) {
+            console.error("Reaction failed", data);
+            return;
+          }
+
+          // Update UI
+          if (data && data.counts) {
+            Object.keys(data.counts).forEach((k) => {
+              const el = document.getElementById(`count-${k}-${reportId}`);
+              if (el) el.textContent = data.counts[k];
+            });
+            const totalEl = document.getElementById(`count-total-${reportId}`);
+            if (totalEl && data.total_reactions !== undefined) {
+                totalEl.textContent = data.total_reactions;
+            }
+          }
+          if (btn) btn.classList.toggle("active");
+      })
+      .catch((err) => console.error("Reaction error", err));
     }
 
-    window.verifyOtpCode = function() {
-      const email = document.getElementById("otp-email").value;
-      const code = document.getElementById("otp-code").value;
-      if (!code) return alert("Please enter the code");
-      const btn = document.getElementById("otp-verify");
-      btn.disabled = true;
-      btn.textContent = "Verifying...";
-      
-      // URL KHUSUS YANG ANDA MINTA
-      fetch("/api/kontol/verify-otp/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-          "X-CSRFToken": csrftoken,
-        },
-        body: `email=${encodeURIComponent(email)}&otp=${encodeURIComponent(code)}`,
-      })
-        .then(async (res) => {
-          const data = await res.json().catch(() => ({}));
-          if (res.ok && data.status === "success") {
-            closeOtpModal();
-            window.location.reload();
-          } else {
-            alert(data.message || "Invalid code");
-            btn.disabled = false;
-            btn.textContent = "Verify";
-          }
-        })
-        .catch((err) => {
-          console.error(err);
-          alert("Network error");
-          btn.disabled = false;
-          btn.textContent = "Verify";
-        });
-    }
 
-    // --- 8. Sidebar Nav Animation ---
+    // --- 8. EXPOSE TO GLOBAL WINDOW (Agar bisa dipanggil onclick HTML) ---
+    window.openReportModal = openReportModal;
+    window.closeReportModal = closeReportModal;
+    window.setReportModalStage = setReportModalStage;
+    
+    window.openOtpModal = openOtpModal;
+    window.closeOtpModal = closeOtpModal;
+    window.sendOtpCode = sendOtpCode;
+    window.verifyOtpCode = verifyOtpCode;
+    
+    window.submitReaction = submitReaction;
+
+
+    // --- 9. Sidebar Nav Animation ---
     (function () {
       const navItems = document.querySelectorAll(".right-nav .nav-item");
       if (!navItems || !navItems.length) return;
@@ -393,9 +399,7 @@ if (window.__colsp_base_js_loaded) {
       });
       navItems.forEach((a) => {
         a.addEventListener("click", (ev) => {
-            // Cek apakah ini tombol dropdown profile (jangan animasi navigasi)
             if(a.hasAttribute('data-bs-toggle')) return; 
-
             ev.preventDefault();
             navItems.forEach((n) => n.classList.remove("active"));
             a.classList.add("active");
