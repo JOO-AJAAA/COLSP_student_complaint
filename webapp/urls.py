@@ -24,8 +24,6 @@ urlpatterns = [
     path('accounts/', include('allauth.urls')),
     # Reports pages and API
     path('reports/', include('reports.urls')),
-    # Include account API endpoints under /api/
-    path('api/', include('kontol.urls')),
     # Include kontol endpoints (guest, otp) under /api/kontol/
     path('api/kontol/', include('kontol.urls')),
 ]

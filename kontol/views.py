@@ -4,7 +4,7 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.models import User
 from django.views.decorators.http import require_POST
 from .utils import create_guest_account, send_otp_email
-from .models import OTPRequest,Profile
+from .models import OTPRequest
 from django.views.decorators.csrf import csrf_exempt
 
 # Create your views here.
@@ -55,71 +55,64 @@ def request_otp_view(request):
 # Logika Inti yang Anda Request ada di sini
 @require_POST
 def verify_otp_view(request):
+    # Debug: Print data yang masuk ke Terminal
+    print("--- DEBUG VERIFY OTP ---")
+    
     email = request.POST.get('email')
     otp_input = request.POST.get('otp')
-    current_user = request.user # Ini User Guest (misal: panda_123)
+    
+    print(f"Email: {email}")
+    print(f"OTP Input: {otp_input}")
 
-    # A. Validasi OTP
+    if not email or not otp_input:
+        return JsonResponse({'status': 'error', 'message': 'Email dan OTP wajib diisi'}, status=400)
+
+    # 1. Cek OTP di Database
+    # Cari OTP yang cocok email & kodenya
     otp_obj = OTPRequest.objects.filter(email=email, otp_code=otp_input).first()
     
-    if not otp_obj or not otp_obj.is_valid():
-        return JsonResponse({'status': 'error', 'message': 'OTP Salah atau Kadaluarsa'})
+    if not otp_obj:
+        print("GAGAL: OTP Salah atau Tidak Ditemukan di DB")
+        return JsonResponse({'status': 'error', 'message': 'Kode OTP Salah!'}, status=400)
     
-    # Hapus OTP setelah dipakai
+    # Cek expired (memanggil method model is_valid)
+    if not otp_obj.is_valid():
+        print("GAGAL: OTP Kadaluarsa")
+        return JsonResponse({'status': 'error', 'message': 'Kode OTP Kadaluarsa'}, status=400)
+
+    # Hapus OTP karena sudah dipakai
     otp_obj.delete()
+    print("SUKSES: OTP Valid. Memproses User...")
 
-    # B. Cek Apakah Email Sudah Terdaftar (Existing User)
-    existing_user = User.objects.filter(email=email).first()
+    # 2. Proses User (Switching atau Promoting)
+    try:
+        current_user = request.user
+        existing_user = User.objects.filter(email=email).first()
 
-    if existing_user:
-        # ==================================================
-        # SKENARIO 1: EMAIL LAMA (SWITCH SESSION & DELETE GUEST)
-        # ==================================================
-        
-        # PENTING: Jika Guest sudah buat laporan, kita harus memindahkan laporan itu 
-        # ke existing_user SEBELUM menghapus guest, kalau tidak laporannya ikut terhapus.
-        # Contoh:
-        # Report.objects.filter(author=current_user).update(author=existing_user)
-        
-        # 1. Transfer guest's reports to the existing user before removing the guest
-        try:
-            from reports.models import Report
-            if current_user and current_user.is_authenticated:
-                Report.objects.filter(author=current_user).update(author=existing_user)
-        except Exception:
-            pass
+        if existing_user:
+            # SKENARIO A: Email Lama (Switch Account)
+            print(f"Switching ke user lama: {existing_user.username}")
+            
+            logout(request)
+            # PENTING: Hapus guest user biar gak nyampah (Opsional)
+            if current_user.is_authenticated and hasattr(current_user, 'profile') and current_user.profile.is_guest:
+                 current_user.delete()
+            
+            login(request, existing_user, backend='django.contrib.auth.backends.ModelBackend')
+            
+        else:
+            # SKENARIO B: Email Baru (Promote Guest)
+            print(f"Promote guest: {current_user.username} ke email {email}")
+            
+            current_user.email = email
+            # Pastikan profile ada sebelum akses
+            if hasattr(current_user, 'profile'):
+                current_user.profile.is_guest = False
+                current_user.profile.save()
+            current_user.save()
 
-        # 2. Logout Guest
-        logout(request)
-        
-        # 3. Hapus Akun Guest (Cleanup)
-        try:
-            if current_user.is_authenticated and getattr(current_user, 'profile', None) and current_user.profile.is_guest:
-                current_user.delete()
-        except Exception:
-            pass
+        return JsonResponse({'status': 'success', 'message': 'Verifikasi Berhasil!'})
 
-        # 3. Login Existing User
-        login(request, existing_user, backend='django.contrib.auth.backends.ModelBackend')
-        
-        return JsonResponse({
-            'status': 'success', 
-            'action': 'switched', 
-            'message': 'Berhasil masuk ke akun lama Anda!'
-        })
-
-    else:
-        # ==================================================
-        # SKENARIO 2: EMAIL BARU (PROMOTE GUEST)
-        # ==================================================
-        
-        current_user.email = email
-        current_user.profile.is_guest = False # Hapus status tamu
-        current_user.profile.save()
-        current_user.save()
-        
-        return JsonResponse({
-            'status': 'success', 
-            'action': 'promoted', 
-            'message': 'Akun berhasil diverifikasi dan disimpan!'
-        })
+    except Exception as e:
+        print(f"ERROR SYSTEM: {e}")
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)

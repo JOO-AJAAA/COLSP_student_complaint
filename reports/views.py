@@ -193,66 +193,77 @@ def submit_report_api(request):
         return JsonResponse({'status': 'error', 'message': 'Terjadi kesalahan sistem saat menyimpan laporan.'}, status=500)
 
 
+from django.shortcuts import get_object_or_404
+from django.http import JsonResponse, HttpResponseBadRequest
+from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_POST
+from .models import Report, Reaction
+
+# PERBAIKAN: Tambahkan parameter 'report_id' di sini agar cocok dengan URL
+@login_required
 @require_POST
-def toggle_reaction(request):
-    """API endpoint to toggle/create reactions for a report.
+def toggle_reaction_api(request, report_id): 
+    
+    # 1. GATEKEEPER: Cek Guest Account
+    # Kita cek apakah user punya profile guest
+    if hasattr(request.user, 'profile') and request.user.profile.is_guest:
+        return JsonResponse({
+            'code': 'guest_restriction', 
+            'message': 'Please verify to interact'
+        }, status=403)
 
-    Expects JSON body: {"report_id": "<uuid>", "type": "agree"}
-    Behavior:
-    - If the user is not authenticated or is a guest account (profile.is_guest),
-      return 403 with code 'guest_restriction' so frontend can open OTP modal.
-    - Otherwise toggle or create the Reaction and return updated counts per type.
-    """
-    import json
-    from django.shortcuts import get_object_or_404
-    from django.http import HttpResponseBadRequest
-    from .models import Reaction
+    # 2. Ambil Data dari URL dan POST
+    # report_id sudah didapat dari parameter fungsi (dari URL)
+    
+    # Karena JS pakai URLSearchParams, data ada di request.POST, BUKAN json body
+    rtype = request.POST.get('reaction_type') 
+    
+    if not rtype:
+        return JsonResponse({'status': 'error', 'message': 'Missing reaction type'}, status=400)
 
-    try:
-        data = json.loads(request.body.decode('utf-8'))
-    except Exception:
-        return HttpResponseBadRequest('Invalid payload')
-
-    report_id = data.get('report_id')
-    rtype = data.get('type')
-    if not report_id or not rtype:
-        return HttpResponseBadRequest('Missing report_id or type')
-
-    # Gatekeeper: deny guests
-    user = request.user
-    if not user.is_authenticated:
-        return JsonResponse({'code': 'guest_restriction', 'message': 'Please verify to interact'}, status=403)
-
-    # If profile exists and is_guest True -> treat as guest
-    profile = getattr(user, 'profile', None)
-    if profile and getattr(profile, 'is_guest', False):
-        return JsonResponse({'code': 'guest_restriction', 'message': 'Please verify to interact'}, status=403)
-
+    # 3. Ambil Report dari Database
     report = get_object_or_404(Report, pk=report_id)
 
+    # 4. Logika Toggle (Simpan/Hapus/Update)
     try:
-        existing = Reaction.objects.filter(user=user, report=report).first()
+        existing = Reaction.objects.filter(user=request.user, report=report).first()
+        
         if existing:
             if existing.type == rtype:
-                # Toggle off
+                # Jika tipe sama -> Hapus (Unlike)
                 existing.delete()
             else:
+                # Jika tipe beda -> Ganti
                 existing.type = rtype
                 existing.save()
         else:
-            Reaction.objects.create(user=user, report=report, type=rtype)
+            # Belum ada -> Buat baru
+            Reaction.objects.create(user=request.user, report=report, type=rtype)
 
-        # Return updated counts
+        # 5. Hitung Ulang Jumlah (Agar UI Update Realtime)
+        # Kita hitung manual dari DB agar akurat
+        # (Alternatif: Gunakan related_name jika sudah diset di models)
+        
+        # Ambil semua reaksi laporan ini
+        reactions = report.reactions.all()
+        
         counts = {
-            'agree': report.agree_count,
-            'support': report.support_count,
-            'sad': report.sad_count,
-            'shock': report.shock_count,
-            'confused': report.confused_count,
+            'agree': reactions.filter(type='agree').count(),
+            'support': reactions.filter(type='support').count(),
+            'sad': reactions.filter(type='sad').count(),
+            'shock': reactions.filter(type='shock').count(),
+            'confused': reactions.filter(type='confused').count(),
         }
+        
+        # Hitung total
+        total_reactions = reactions.count()
 
-        return JsonResponse({'status': 'success', 'counts': counts})
+        return JsonResponse({
+            'status': 'success', 
+            'counts': counts,
+            'total_reactions': total_reactions
+        })
 
     except Exception as e:
-        print('Reaction error:', e)
-        return JsonResponse({'status': 'error', 'message': 'Unable to process reaction'}, status=500)
+        print(f"Reaction Error: {e}")
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
