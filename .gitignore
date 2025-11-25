@@ -3,3 +3,7 @@ __pycache__/
 *.pyc
 *.env
 .env.local
+media/
+.envrc
+.vscode/
+migrations/

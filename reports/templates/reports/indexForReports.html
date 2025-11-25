@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% load static %}
+
+{%block style_page%}<link rel="stylesheet" type="text/css" href="{% static 'css/base.css' %}">{% endblock %}
+{% block content %}
+    {%include 'includes/navbar.html'%}
+
+{% endblock %}
+{% block logic_script_page %}<script src="{% static 'js/base.js' %}"></script>{% endblock %}

@@ -4,8 +4,11 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.contrib.auth.models import User
 from .models import Profile, OTPRequest
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
+from django.core.mail import EmailMultiAlternatives
 
-# Pastikan list ini sesuai dengan nama file di static/account/img/
+# Make sure this list matches the file names in static/account/img/
 ANIMALS = ['kucing', 'panda', 'rubah', 'koala', 'bebek']
 
 def create_guest_account():
@@ -42,23 +45,44 @@ def create_guest_account():
 
     return user
 
-def send_otp_email(email):
-    """Generate OTP, simpan di DB, dan kirim email"""
-    # Generate 6 digit angka
-    otp = ''.join(random.choices(string.digits, k=6))
+def send_otp_email(email_tujuan):
+    """
+    Generate OTP, Simpan ke DB, dan Kirim Email HTML Cantik.
+    """
+    # 1. Generate Kode 6 Digit
+    otp_code = ''.join(random.choices(string.digits, k=6))
     
-    # Hapus OTP lama untuk email ini (biar gak numpuk)
-    OTPRequest.objects.filter(email=email).delete()
+    # 2. Simpan ke Database
+    # Hapus OTP lama milik email ini (Cleanup) agar tidak numpuk
+    OTPRequest.objects.filter(email=email_tujuan).delete()
     
-    # Simpan baru
-    OTPRequest.objects.create(email=email, otp_code=otp)
+    # Buat OTP baru (created_at otomatis terisi oleh Django)
+    OTPRequest.objects.create(email=email_tujuan, otp_code=otp_code)
     
-    # Kirim Email (Pastikan setting EMAIL_HOST di settings.py sudah benar)
-    send_mail(
-        'Kode Verifikasi COLSP',
-        f'Kode OTP Anda adalah: {otp}. Berlaku 5 menit.',
-        settings.DEFAULT_FROM_EMAIL,
-        [email],
-        fail_silently=False,
-    )
-    return True
+    # 3. Siapkan Email
+    subject = '🔐 Kode OTP Verifikasi COLSP'
+    from_email = settings.DEFAULT_FROM_EMAIL
+    to = [email_tujuan]
+    
+    # Context data untuk dikirim ke template HTML
+    context = {
+        'otp_code': otp_code
+    }
+    
+    # 4. Render Template
+    # Pastikan file 'templates/account/email/otp_email.html' sudah dibuat
+    html_content = render_to_string('account/email/otp_email.html', context)
+    
+    # Buat versi Text Only (untuk fallback)
+    text_content = strip_tags(html_content) 
+    
+    # 5. Buat Objek Email dan Kirim
+    msg = EmailMultiAlternatives(subject, text_content, from_email, to)
+    msg.attach_alternative(html_content, "text/html") # Tempelkan versi HTML
+    
+    try:
+        msg.send()
+        return True
+    except Exception as e:
+        print(f"🔥 Gagal mengirim OTP: {e}")
+        return False

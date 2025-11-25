@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'kontol.apps.KontolConfig',
+    'reports.apps.ReportsConfig',
     
     # django-allauth
     "django.contrib.sites",
@@ -153,5 +154,21 @@ SOCIALACCOUNT_PROVIDERS = {
         ],
     }
 }
+HUGGINGFACE_API_KEY = os.getenv('HUGGINGFACE_API_KEY')
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+
+# Konfigurasi Server Gmail
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True  # Enkripsi agar aman
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')      # Email Gmail Anda
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD') # App Password (BUKAN password login biasa)
+
+# Email Pengirim Default
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER

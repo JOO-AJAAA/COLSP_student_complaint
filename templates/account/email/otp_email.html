@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kode Verifikasi COLSP</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f4f4f4; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+
+    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+        <tr>
+            <td style="padding: 20px 0 30px 0;">
+
+                <table align="center" border="0" cellpadding="0" cellspacing="0" width="600" style="border-collapse: collapse; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: hidden;">
+                    
+                    <tr>
+                        <td align="center" style="padding: 30px 0; background-color: #1a1a1a;">
+                            <h1 style="margin: 0; font-size: 28px; font-weight: bold; color: #ffffff; letter-spacing: 2px;">
+                                COLSP
+                            </h1>
+                            <p style="margin: 5px 0 0; font-size: 14px; color: #cccccc;">Student Complaint Service</p>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td style="padding: 40px 30px;">
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                                <tr>
+                                    <td style="color: #333333; font-size: 16px; line-height: 24px; text-align: center;">
+                                        <h2 style="font-size: 22px; margin-bottom: 20px; color: #333333;">Verifikasi Akun Tamu</h2>
+                                        <p style="margin-bottom: 30px;">
+                                            Halo! Kami menerima permintaan untuk memverifikasi akun Anda agar dapat berinteraksi (Reaction/Upvote) di platform kami.
+                                        </p>
+                                        
+                                        <div style="background-color: #f0fdf4; border: 2px dashed #4ade80; border-radius: 8px; padding: 20px; margin: 0 auto; width: fit-content;">
+                                            <p style="margin: 0; font-size: 14px; color: #166534; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">Kode OTP Anda</p>
+                                            <p style="margin: 10px 0 0; font-size: 36px; font-weight: 800; color: #15803d; letter-spacing: 5px;">
+                                                {{ otp_code }}
+                                            </p>
+                                        </div>
+
+                                        <p style="margin-top: 30px; font-size: 14px; color: #666666;">
+                                            Kode ini hanya berlaku selama <strong>5 menit</strong>. Jangan berikan kode ini kepada siapapun, termasuk tim kami.
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td style="padding: 20px 30px; background-color: #f8f9fa; border-top: 1px solid #eeeeee;">
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                                <tr>
+                                    <td style="color: #999999; font-size: 12px; text-align: center;">
+                                        <p style="margin: 0;">Jika Anda tidak merasa meminta kode ini, silakan abaikan email ini.</p>
+                                        <p style="margin: 10px 0 0;">&copy; {% now "Y" %} COLSP - Campus Online Student Complaint.</p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                </table>
+                </td>
+        </tr>
+    </table>
+
+</body>
+</html>

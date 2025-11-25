@@ -15,14 +15,13 @@ class Profile(models.Model):
     def __str__(self):
         return self.user.username
 
-# 2. Model untuk menyimpan Kode OTP Sementara
 class OTPRequest(models.Model):
-    # Kita simpan email tujuan, bukan User, karena User-nya mungkin belum ada (atau Guest)
+    # We save the destination email, not the User, because the User may not exist yet (or may be a Guest).
     email = models.EmailField()
     otp_code = models.CharField(max_length=6)
     created_at = models.DateTimeField(auto_now_add=True)
     
-    # OTP valid selama 5 menit
+    # OTP valid for 5 minutes
     def is_valid(self):
         return self.created_at >= timezone.now() - datetime.timedelta(minutes=5)
 
