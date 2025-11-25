@@ -1,0 +1,137 @@
+{% load static %}
+
+<div class="report-post card bg-dark text-white mb-4">
+  <div class="card-body">
+    <div class="d-flex align-items-start">
+      <div class="me-3">
+        {% if report.author.profile.avatar_animal %}
+        <img
+          src="{% static 'account/img/' %}{{ report.author.profile.avatar_animal }}.svg"
+          class="rounded-circle"
+          alt="avatar"
+          style="width: 56px; height: 56px"
+        />
+        {% else %}
+        <div
+          class="avatar-fallback rounded-circle bg-secondary d-flex align-items-center justify-content-center"
+          style="width: 56px; height: 56px"
+        >
+          <i class="fas fa-user text-white"></i>
+        </div>
+        {% endif %}
+      </div>
+      <div class="flex-grow-1">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <h5 class="card-title mb-1">{{ report.title }}</h5>
+            <div class="small text-muted">
+              By
+              <strong
+                >{{ report.author.get_full_name|default:report.author.username
+                }}</strong
+              >
+              • <span class="text-capitalize">{{ report.category }}</span> • {{
+              report.created_at|date:"j M Y H:i" }}
+            </div>
+          </div>
+          <div class="text-end">
+            <span class="badge bg-info text-dark"
+              >{{ report.get_status_display }}</span
+            >
+          </div>
+        </div>
+
+        <p class="card-text mt-3 report-description">
+          {{ report.description|linebreaks }}
+        </p>
+
+        {% if report.attachment %}
+        <div class="mt-3">
+          <strong>Attachments:</strong>
+          <div class="mt-2">
+            <a
+              href="{{ report.attachment.url }}"
+              target="_blank"
+              class="text-decoration-none text-info"
+              >Download file</a
+            >
+          </div>
+        </div>
+        {% endif %} {% if report.ai_summary %}
+        <div class="mt-3 alert alert-secondary text-dark">
+          <strong>Summary:</strong>
+          <div class="mt-1">{{ report.ai_summary|linebreaks }}</div>
+        </div>
+        {% endif %}
+
+        <div class="mt-3 d-flex align-items-center gap-3">
+          <!-- Reaction buttons -->
+          <div class="reactions d-flex gap-2">
+            <button
+              class="btn btn-sm btn-reaction"
+              onclick="submitReaction('{{ report.id }}','agree', this)"
+              title="Agree"
+            >
+              <i class="fa-regular fa-thumbs-up"></i>
+              <span id="count-agree-{{ report.id }}" class="ms-1"
+                >{{ report.agree_count }}</span
+              >
+            </button>
+
+            <button
+              class="btn btn-sm btn-reaction"
+              onclick="submitReaction('{{ report.id }}','support', this)"
+              title="Support"
+            >
+              <i class="fas fa-fire"></i>
+              <span id="count-support-{{ report.id }}" class="ms-1"
+                >{{ report.support_count }}</span
+              >
+            </button>
+
+            <button
+              class="btn btn-sm btn-reaction"
+              onclick="submitReaction('{{ report.id }}','sad', this)"
+              title="Sad"
+            >
+              <i class="fas fa-face-cry"></i>
+              <span id="count-sad-{{ report.id }}" class="ms-1"
+                >{{ report.sad_count }}</span
+              >
+            </button>
+
+            <button
+              class="btn btn-sm btn-reaction"
+              onclick="submitReaction('{{ report.id }}','shock', this)"
+              title="Shock"
+            >
+              <i class="fas fa-face-surprise"></i>
+              <span id="count-shock-{{ report.id }}" class="ms-1"
+                >{{ report.shock_count }}</span
+              >
+            </button>
+
+            <button
+              class="btn btn-sm btn-reaction"
+              onclick="submitReaction('{{ report.id }}','confused', this)"
+              title="Confused"
+            >
+              <i class="fas fa-face-thinking"></i>
+              <span id="count-confused-{{ report.id }}" class="ms-1"
+                >{{ report.confused_count }}</span
+              >
+            </button>
+          </div>
+
+          <!-- Quick metadata -->
+          <div class="ms-auto small text-muted">
+            Total reactions:
+            <span id="count-total-{{ report.id }}"
+              >{{ report.total_reactions_count }}</span
+            >
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -53,6 +53,27 @@ class Report(models.Model):
         if not user.is_authenticated: return False
         return self.reactions.filter(user=user, type='agree').exists()
 
+    # Per-type reaction counts (convenience properties for templates)
+    @property
+    def agree_count(self):
+        return self.reactions.filter(type='agree').count()
+
+    @property
+    def support_count(self):
+        return self.reactions.filter(type='support').count()
+
+    @property
+    def sad_count(self):
+        return self.reactions.filter(type='sad').count()
+
+    @property
+    def shock_count(self):
+        return self.reactions.filter(type='shock').count()
+
+    @property
+    def confused_count(self):
+        return self.reactions.filter(type='confused').count()
+
     # Auto Slug Generator
     def save(self, *args, **kwargs):
         if not self.slug:

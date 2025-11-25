@@ -375,6 +375,45 @@ textarea.form-control {
   object-fit: cover;
 }
 
+/* Report post styling */
+.report-post {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.report-post .card-body {
+  padding: 1rem 1.25rem;
+}
+.report-post .card-title {
+  font-size: 1.05rem;
+  margin-bottom: 0;
+}
+.report-description {
+  color: var(--text-secondary);
+}
+
+/* Reaction buttons */
+.btn-reaction {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-primary);
+  padding: 0.35rem 0.6rem;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+.btn-reaction:hover {
+  background: rgba(255, 255, 255, 0.03);
+  transform: translateY(-2px);
+}
+.btn-reaction.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: transparent;
+}
+
 /* Auth modal overlay (ChatGPT-style) */
 .auth-overlay {
   position: fixed;

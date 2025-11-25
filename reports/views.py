@@ -14,7 +14,9 @@ from .gemini_utils import generate_report_metadata
 # Create your views here.
 
 def reports(request):
-  return render(request, 'reports/indexForReports.html')
+    # List recent reports for index view
+    qs = Report.objects.select_related('author').all()
+    return render(request, 'reports/indexForReports.html', {'reports_list': qs})
 
 # Import your Gemini wrapper here
 # from .gemini_utils import generate_ai_summary 
@@ -133,3 +135,68 @@ def submit_report_api(request):
     except Exception as e:
         print(f"Error Saving Report: {e}")
         return JsonResponse({'status': 'error', 'message': 'Terjadi kesalahan sistem saat menyimpan laporan.'}, status=500)
+
+
+@require_POST
+def toggle_reaction(request):
+    """API endpoint to toggle/create reactions for a report.
+
+    Expects JSON body: {"report_id": "<uuid>", "type": "agree"}
+    Behavior:
+    - If the user is not authenticated or is a guest account (profile.is_guest),
+      return 403 with code 'guest_restriction' so frontend can open OTP modal.
+    - Otherwise toggle or create the Reaction and return updated counts per type.
+    """
+    import json
+    from django.shortcuts import get_object_or_404
+    from django.http import HttpResponseBadRequest
+    from .models import Reaction
+
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+    except Exception:
+        return HttpResponseBadRequest('Invalid payload')
+
+    report_id = data.get('report_id')
+    rtype = data.get('type')
+    if not report_id or not rtype:
+        return HttpResponseBadRequest('Missing report_id or type')
+
+    # Gatekeeper: deny guests
+    user = request.user
+    if not user.is_authenticated:
+        return JsonResponse({'code': 'guest_restriction', 'message': 'Please verify to interact'}, status=403)
+
+    # If profile exists and is_guest True -> treat as guest
+    profile = getattr(user, 'profile', None)
+    if profile and getattr(profile, 'is_guest', False):
+        return JsonResponse({'code': 'guest_restriction', 'message': 'Please verify to interact'}, status=403)
+
+    report = get_object_or_404(Report, pk=report_id)
+
+    try:
+        existing = Reaction.objects.filter(user=user, report=report).first()
+        if existing:
+            if existing.type == rtype:
+                # Toggle off
+                existing.delete()
+            else:
+                existing.type = rtype
+                existing.save()
+        else:
+            Reaction.objects.create(user=user, report=report, type=rtype)
+
+        # Return updated counts
+        counts = {
+            'agree': report.agree_count,
+            'support': report.support_count,
+            'sad': report.sad_count,
+            'shock': report.shock_count,
+            'confused': report.confused_count,
+        }
+
+        return JsonResponse({'status': 'success', 'counts': counts})
+
+    except Exception as e:
+        print('Reaction error:', e)
+        return JsonResponse({'status': 'error', 'message': 'Unable to process reaction'}, status=500)
