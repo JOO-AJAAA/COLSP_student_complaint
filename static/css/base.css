@@ -446,3 +446,59 @@ textarea.form-control {
   color: var(--text-secondary);
   cursor: pointer;
 }
+
+/* --- PAKSA KARTU SELALU GELAP (HYBRID STYLE) --- */
+
+.report-post {
+  /* Selalu gunakan warna gelap, tidak peduli tema website apa */
+  background-color: #222 !important; 
+  border: 1px solid #333 !important;
+  color: #ffffff !important; /* Teks Selalu Putih */
+}
+
+/* Paksa Judul, Paragraf, dan Heading jadi Putih */
+.report-post h5,
+.report-post .card-title,
+.report-post p,
+.report-post .lead,
+.report-post strong,
+.report-post span {
+  color: #ffffff !important;
+}
+
+/* Paksa Teks Sekunder (Tanggal/Kategori) jadi Abu terang */
+.report-post .text-muted,
+.report-post .text-secondary,
+.report-post .small {
+  color: #b0b0b0 !important; 
+}
+
+/* --- BAGIAN REACTION (YANG TADI BERMASALAH) --- */
+.btn-reaction {
+  background: transparent;
+  border: 1px solid transparent;
+}
+
+/* Paksa Ikon dan Angka Selalu Putih/Terang */
+.btn-reaction i, 
+.btn-reaction span {
+  color: #e0e0e0 !important; /* Putih agak abu dikit biar ga sakit mata */
+  font-weight: 600;
+}
+
+/* Saat Hover */
+.btn-reaction:hover {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+}
+
+/* Saat Aktif */
+.btn-reaction.active span,
+.btn-reaction.active i {
+  color: #ffffff !important;
+}
+
+/* Link Attachment */
+.attachment-list a {
+    color: #4ade80 !important; /* Hijau terang biar kontras di hitam */
+}

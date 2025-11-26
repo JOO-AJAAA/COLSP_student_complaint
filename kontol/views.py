@@ -25,6 +25,8 @@ def profile_view(request):
     }
     return render(request, 'account/profile.html', context)
 
+
+
 # Create your views here.
 def guest_login_view(request):
     user = create_guest_account()
