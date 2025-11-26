@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% load static %}
+{% block style_page %}
+    <link rel="stylesheet" type="text/css" href="{% static 'css/base.css' %}"/>
+{% endblock %}
+{% block content %}
+{% include 'includes/navbar.html' %}
+
+<div class="container py-5">
+    <div class="row">
+        
+        <div class="col-md-4 mb-4">
+            <div class="card bg-dark text-white border-secondary shadow-sm sticky-top" style="top: 80px;">
+                <div class="card-body text-center p-4">
+                    
+                    <div class="mb-3 position-relative d-inline-block">
+                        {% if user.socialaccount_set.count %}
+                            <img src="{{ user.socialaccount_set.all.0.get_avatar_url }}" class="rounded-circle border border-2 border-success" style="width: 120px; height: 120px; object-fit: cover;">
+                        {% elif user.profile.avatar_animal %}
+                            <img src="{% static 'account/img/' %}{{ user.profile.avatar_animal }}.svg" class="rounded-circle border border-2 border-success p-2 bg-light" style="width: 120px; height: 120px; object-fit: cover;" alt="{{ user.username }} avatar">
+                        {% else %}
+                            <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center mx-auto" style="width: 120px; height: 120px; font-size: 3rem;">
+                                {{ user.username|slice:":1"|upper }}
+                            </div>
+                        {% endif %}
+                        
+                        {% if not user.profile.is_guest %}
+                        <span class="position-absolute bottom-0 end-0 badge rounded-pill bg-success border border-dark">
+                            Verified <i class="fas fa-check-circle ms-1"></i>
+                        </span>
+                        {% else %}
+                        <span class="position-absolute bottom-0 end-0 badge rounded-pill bg-warning text-dark border border-dark">
+                            Guest
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    <h4 class="fw-bold mb-1">{{ user.username }}</h4>
+                    <p class="small">{{ user.email|default:"No email linked" }}</p>
+
+                    <hr class="border-secondary my-4">
+
+                    <div class="row text-center">
+                        <div class="col-6 border-end border-secondary">
+                            <h3 class="fw-bold mb-0 text-success">{{ stats.total_reports }}</h3>
+                            <small class="text">Reports</small>
+                        </div>
+                        <div class="col-6">
+                            <h3 class="fw-bold mb-0 text-info">{{ stats.total_impact }}</h3>
+                            <small class="text">Impact (Reactions)</small>
+                        </div>
+                    </div>
+
+                    <hr class="border-secondary my-4">
+
+                    <div class="d-grid gap-2">
+                        <form method="post" action="{% url 'account_logout' %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-danger w-100">
+                                <i class="fas fa-sign-out-alt me-2"></i> Sign Out
+                            </button>
+                        </form>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <h4 class="mb-4 border-start border-4 border-success ps-3 theme-indicator" id="themeIndicator">My Activity History</h4>
+
+            {% if reports %}
+                {% for report in reports %}
+                    {% include 'reports/report_post.html' with report=report %}
+                {% endfor %}
+            {% else %}
+                <div class="text-center py-5 ">
+                    <i class="fas fa-ghost fa-4x mb-3 opacity-50 theme-indicator" id="themeIndicator"></i>
+                    <h5 class="theme-indicator" id="themeIndicator">Belum ada aktivitas</h5>
+                    <p class="theme-indicator" id="themeIndicator">Laporan yang Anda buat akan muncul di sini.</p>
+                    <a href="/" class="btn btn-success mt-2">Buat Laporan Baru</a>
+                </div>
+            {% endif %}
+        </div>
+
+    </div>
+</div>
+
+{% include 'includes/sidebar.html' %}
+{% endblock %}
+{% block logic_script_page %}
+    <script src="{% static 'js/base.js' %}"></script>
+{% endblock %}

@@ -95,7 +95,7 @@
           </div>
 
           <footer
-            class="card-footer bg-transparent border-top-0 d-flex align-items-center justify-content-between"
+            class="card-footer border-top-0 d-flex align-items-center justify-content-between "
           >
             <div class="d-flex gap-2 align-items-center">
               <button
@@ -104,7 +104,7 @@
                 onclick="submitReaction('{{ report.id }}','agree', this)"
                 title="Agree"
               >
-                <i class="fa-regular fa-thumbs-up"></i>
+                <i class="fa-regular fa-thumbs-up theme-indicator" id="themeIndicator"></i>
                 <span id="count-agree-{{ report.id }}" class="ms-2"
                   >{{ report.agree_count }}</span
                 >
@@ -116,7 +116,7 @@
                 onclick="submitReaction('{{ report.id }}','support', this)"
                 title="Support"
               >
-                <i class="fas fa-fire"></i>
+                <i class="fas fa-fire theme-indicator" id="themeIndicator"></i>
                 <span id="count-support-{{ report.id }}" class="ms-2"
                   >{{ report.support_count }}</span
                 >
@@ -157,13 +157,6 @@
                   >{{ report.confused_count }}</span
                 >
               </button>
-            </div>
-
-            <div class="small text-secondary">
-              Total:
-              <span id="count-total-{{ report.id }}"
-                >{{ report.total_reactions_count }}</span
-              >
             </div>
           </footer>
         </article>

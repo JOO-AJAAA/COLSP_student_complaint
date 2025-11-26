@@ -5,7 +5,25 @@ from django.contrib.auth.models import User
 from django.views.decorators.http import require_POST
 from .utils import create_guest_account, send_otp_email
 from .models import OTPRequest
+from reports.models import Report
+from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
+
+@login_required
+def profile_view(request):
+    user = request.user
+    user_reports = Report.objects.filter(author=user).order_by('-created_at')
+    total_reports = user_reports.count()
+    total_impact = sum(r.total_upvotes for r in user_reports)
+    context = {
+        'user': user,
+        'reports': user_reports,
+        'stats': {
+            'total_reports': total_reports,
+            'total_impact': total_impact,
+        }
+    }
+    return render(request, 'account/profile.html', context)
 
 # Create your views here.
 def guest_login_view(request):

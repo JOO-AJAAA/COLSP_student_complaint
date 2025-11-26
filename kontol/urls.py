@@ -8,4 +8,5 @@ urlpatterns = [
 		path('guest-login/', views.guest_login_api, name='guest_login_api'),
     path('request-otp/', views.request_otp_view, name='request-otp'),
     path('verify-otp/', views.verify_otp_view, name='verify-otp'),
+    
 ]
