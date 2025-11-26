@@ -17,7 +17,7 @@
   (function () {
     // Call guest-login API when user closes the modal or clicks guest button
     function doGuestLogin() {
-      fetch("/api/kontol/guest-login/", {
+      fetch("/api/profiles/guest-login/", {
         method: "POST",
         credentials: "same-origin",
         headers: {

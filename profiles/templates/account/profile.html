@@ -14,17 +14,17 @@
                 <div class="card-body text-center p-4">
                     
                     <div class="mb-3 position-relative d-inline-block">
-                        {% if user.socialaccount_set.count %}
-                            <img src="{{ user.socialaccount_set.all.0.get_avatar_url }}" class="rounded-circle border border-2 border-success" style="width: 120px; height: 120px; object-fit: cover;">
-                        {% elif user.profile.avatar_animal %}
-                            <img src="{% static 'account/img/' %}{{ user.profile.avatar_animal }}.svg" class="rounded-circle border border-2 border-success p-2 bg-light" style="width: 120px; height: 120px; object-fit: cover;" alt="{{ user.username }} avatar">
+                        {% if profile_user.socialaccount_set.count %}
+                            <img src="{{ profile_user.socialaccount_set.all.0.get_avatar_url }}" class="rounded-circle border border-2 border-success" style="width: 120px; height: 120px; object-fit: cover;">
+                        {% elif profile_user.profile.avatar_animal %}
+                            <img src="{% static 'account/img/' %}{{ profile_user.profile.avatar_animal }}.svg" class="rounded-circle border border-2 border-success p-2 bg-light" style="width: 120px; height: 120px; object-fit: cover;" alt="{{ profile_user.username }} avatar">
                         {% else %}
                             <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center mx-auto" style="width: 120px; height: 120px; font-size: 3rem;">
-                                {{ user.username|slice:":1"|upper }}
+                                {{ profile_user.username|slice:":1"|upper }}
                             </div>
                         {% endif %}
                         
-                        {% if not user.profile.is_guest %}
+                        {% if not profile_user.profile.is_guest %}
                         <span class="position-absolute bottom-0 end-0 badge rounded-pill bg-success border border-dark">
                             Verified <i class="fas fa-check-circle ms-1"></i>
                         </span>
@@ -35,9 +35,10 @@
                         {% endif %}
                     </div>
 
-                    <h4 class="fw-bold mb-1">{{ user.username }}</h4>
-                    <p class="small">{{ user.email|default:"No email linked" }}</p>
-
+                    <h4 class="fw-bold mb-1">{{ profile_user.username }}</h4>
+                    {% if is_me %}
+                    <p class="small">{{ profile_user.email|default:"No email linked" }}</p>
+                    {% endif %}
                     <hr class="border-secondary my-4">
 
                     <div class="row text-center">
@@ -52,7 +53,7 @@
                     </div>
 
                     <hr class="border-secondary my-4">
-
+                    {% if is_me %}
                     <div class="d-grid gap-2">
                         <form method="post" action="{% url 'account_logout' %}">
                             {% csrf_token %}
@@ -61,7 +62,7 @@
                             </button>
                         </form>
                     </div>
-
+                    {% endif %}
                 </div>
             </div>
         </div>

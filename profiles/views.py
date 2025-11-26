@@ -1,4 +1,4 @@
-from django.shortcuts import render,redirect
+from django.shortcuts import render,redirect, get_object_or_404
 from django.http import JsonResponse
 from django.contrib.auth import login, logout
 from django.contrib.auth.models import User
@@ -16,16 +16,42 @@ def profile_view(request):
     total_reports = user_reports.count()
     total_impact = sum(r.total_upvotes for r in user_reports)
     context = {
-        'user': user,
+        'profile_user': request.user,
         'reports': user_reports,
         'stats': {
             'total_reports': total_reports,
             'total_impact': total_impact,
-        }
+        },
+        'is_me': True,
     }
     return render(request, 'account/profile.html', context)
 
+def public_profile_view(request, username):
+    # Ambil user berdasarkan username di URL. Kalau gak ada, error 404.
+    target_user = get_object_or_404(User, username=username)
+    
+    # Ambil laporan milik user tersebut
+    user_reports = Report.objects.filter(author=target_user).order_by('-created_at')
+    
+    # Hitung Statistik (Sama seperti sebelumnya)
+    total_reports = user_reports.count()
+    total_impact = sum(r.total_reactions_count for r in user_reports)
 
+    # Kita kirim variabel 'is_me' untuk mengecek apakah kita sedang melihat profil sendiri
+    is_me = (request.user == target_user)
+
+    context = {
+        'profile_user': target_user, # Gunakan nama variabel baru biar jelas
+        'reports': user_reports,
+        'stats': {
+            'total_reports': total_reports,
+            'total_impact': total_impact
+        },
+        'is_me': is_me,
+    }
+    
+    # Kita REUSE (Pakai Ulang) template profile.html yang sudah ada
+    return render(request, 'account/profile.html', context)
 
 # Create your views here.
 def guest_login_view(request):

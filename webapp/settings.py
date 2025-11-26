@@ -38,7 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'kontol.apps.KontolConfig',
+    'profiles.apps.ProfilesConfig',
     'reports.apps.ReportsConfig',
     'chatbot_faq.apps.ChatbotFaqConfig',
     
