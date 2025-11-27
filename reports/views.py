@@ -1,4 +1,6 @@
 from django.shortcuts import render,get_object_or_404
+from django.core.paginator import Paginator
+from django.template.loader import render_to_string
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
@@ -15,25 +17,28 @@ from .gemini_utils import generate_report_metadata
 # Create your views here.
 
 def reports(request):
-    # 1. OPTIMASI DATABASE
-    # Tambahkan 'prefetch_related' untuk 'reactions'. 
-    # Ini mengambil semua reaksi sekaligus, jadi jauh lebih cepat.
-    qs = Report.objects.select_related('author').prefetch_related('reactions').all()
+    # 1. Query Dasar (Belum dieksekusi/Lazy)
+    qs = Report.objects.select_related('author').prefetch_related('reactions').order_by('-created_at')
 
-    # Import SocialAccount dengan aman
+    # 2. SETUP PAGINATOR (6 Postingan per halaman)
+    paginator = Paginator(qs, 6) 
+    page_number = request.GET.get('page', 1) # Ambil nomor halaman dari URL (default 1)
+    page_obj = paginator.get_page(page_number)
+
+    # 3. IMPORT SOCIAL ACCOUNT (Sama seperti sebelumnya)
     try:
         from allauth.socialaccount.models import SocialAccount
     except ImportError:
         SocialAccount = None
 
-    reports_list = []
+    # 4. PROCESS HANYA 6 ITEM (Optimasi Kinerja)
+    final_reports_list = []
     
-    for r in qs:
-        # --- LOGIKA AVATAR (Kode Anda Sebelumnya) ---
+    for r in page_obj: # Loop hanya berjalan 6 kali
+        # --- A. Logic Avatar ---
         author_name = r.author.get_full_name() or r.author.username
         avatar_url = ''
         
-        # Cek Profile (Guest)
         try:
             prof = getattr(r.author, 'profile', None)
             if prof and getattr(prof, 'avatar_animal', None):
@@ -41,42 +46,41 @@ def reports(request):
         except Exception:
             pass
 
-        # Cek Social Account (Google)
         if not avatar_url and SocialAccount:
             sa = SocialAccount.objects.filter(user=r.author).first()
             if sa:
                 extra = getattr(sa, 'extra_data', {}) or {}
                 avatar_url = extra.get('picture') or extra.get('avatar_url') or ''
 
-        # Pasang atribut Avatar & Nama
         setattr(r, 'author_display_name', author_name)
         setattr(r, 'author_avatar_url', avatar_url)
 
-        # --- LOGIKA MENGHITUNG REACTION (INI YANG KURANG) ---
-        # Kita hitung manual menggunakan Python list comprehension
-        # karena datanya sudah di-prefetch (ada di memori), ini sangat cepat.
-        
-        all_reactions = r.reactions.all() # Mengambil dari cache prefetch
-        
-        # Hitung jumlah per tipe
-        agree_c = sum(1 for x in all_reactions if x.type == 'agree')
-        support_c = sum(1 for x in all_reactions if x.type == 'support')
-        sad_c = sum(1 for x in all_reactions if x.type == 'sad')
-        shock_c = sum(1 for x in all_reactions if x.type == 'shock')
-        confused_c = sum(1 for x in all_reactions if x.type == 'confused')
+        # --- B. Logic Reaction ---
+        all_reactions = r.reactions.all()
+        r.agree_count = sum(1 for x in all_reactions if x.type == 'agree')
+        r.support_count = sum(1 for x in all_reactions if x.type == 'support')
+        r.sad_count = sum(1 for x in all_reactions if x.type == 'sad')
+        r.shock_count = sum(1 for x in all_reactions if x.type == 'shock')
+        r.confused_count = sum(1 for x in all_reactions if x.type == 'confused')
+        r.total_reactions_count = len(all_reactions)
 
-        # Tempelkan hasil hitungan ke objek report agar bisa dibaca template
-        setattr(r, 'custom_agree_count', agree_c)
-        setattr(r, 'custom_support_count', support_c)
-        setattr(r, 'custom_sad_count', sad_c)
-        setattr(r, 'custom_shock_count', shock_c)
-        setattr(r, 'custom_confused_count', confused_c)
-        # Masukkan ke list final
-        reports_list.append(r)
+        final_reports_list.append(r)
 
-    return render(request, 'reports/indexForReports.html', {'reports_list': reports_list})
-# Import your Gemini wrapper here
-# from .gemini_utils import generate_ai_summary 
+    # 5. CEK: APAKAH INI REQUEST SCROLLING (AJAX)?
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        # Render potongan HTML kartu saja (bukan seluruh halaman)
+        html = render_to_string('reports/includes/report_list_chunk.html', {'reports_list': final_reports_list}, request=request)
+        
+        return JsonResponse({
+            'html': html,
+            'has_next': page_obj.has_next() # Beritahu JS apakah masih ada halaman berikutnya
+        })
+
+    # 6. JIKA BUKAN AJAX (Halaman Pertama dibuka biasa)
+    return render(request, 'reports/indexForReports.html', {
+        'reports_list': final_reports_list,
+        'has_next': page_obj.has_next() # Untuk inisialisasi JS
+    })
 
 @require_POST
 def submit_report_api(request):

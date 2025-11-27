@@ -1,30 +1,33 @@
 {% extends "base.html" %}
 {% load static %}
-
 {% block style_page %}
     <link rel="stylesheet" type="text/css" href="{% static 'css/base.css' %}"/>
 {% endblock %}
-
 {% block content %}
-    {% include 'includes/navbar.html' %}
-    
     <div class="container py-4">
         <div class="row">
             <div class="col-md-8">
-                <h3 class="mb-3 theme-indicator" id="themeIndicato">Community Reports</h3>
+                <h3 class="text-white mb-3">Community Reports</h3>
                 
-                {% if reports_list %}
-                    {% for report in reports_list %}
-                        {% include 'reports/report_post.html' with report=report %}
-                    {% endfor %}
-                {% else %}
-                    <div class="alert alert-secondary text-dark">
-                        <i class="fas fa-info-circle me-2"></i> No reports yet.
+                <div id="reports-container">
+                    {% if reports_list %}
+                        {% include 'reports/includes/report_list_chunk.html' %}
+                    {% else %}
+                        <div class="alert alert-secondary text-dark">
+                            No reports yet.
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div id="loading-sentinel" class="text-center py-4 {% if not has_next %}d-none{% endif %}">
+                    <div class="spinner-border text-success" role="status">
+                        <span class="visually-hidden">Loading...</span>
                     </div>
-                {% endif %}
+                </div>
+
             </div>
             
-            <div class="col-md-4">
+            <div class="col-md-4 d-none d-md-block">
                 {% include 'includes/sidebar.html' %}
             </div>
         </div>
@@ -32,5 +35,56 @@
 {% endblock %}
 
 {% block logic_script_page %}
-    <script src="{% static 'js/base.js' %}"></script>
+<script src="{% static 'js/base.js' %}"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    let page = 1;
+    
+    const container = document.getElementById('reports-container');
+    const sentinel = document.getElementById('loading-sentinel');
+    let isLoading = false;
+    let hasNext = "{{ has_next }}" === "True";
+    // Gunakan IntersectionObserver (Cara Modern & Ringan)
+    const observer = new IntersectionObserver((entries) => {
+        // Jika sentinel terlihat di layar DAN masih ada halaman sisa DAN tidak sedang loading
+        if (entries[0].isIntersecting && hasNext && !isLoading) {
+            loadMoreReports();
+        }
+    }, { rootMargin: "100px" }); // Load 100px sebelum mentok bawah
+
+    if (sentinel) observer.observe(sentinel);
+
+    function loadMoreReports() {
+        isLoading = true;
+        page++; // Naikkan halaman
+
+        // Fetch ke URL yang sama tapi tambah parameter page
+        fetch(`?page=${page}`, {
+            headers: {
+                "X-Requested-With": "XMLHttpRequest" // Tandai sebagai AJAX
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            // 1. Tempelkan HTML baru ke bawah
+            container.insertAdjacentHTML('beforeend', data.html);
+            
+            // 2. Update status
+            hasNext = data.has_next;
+            isLoading = false;
+
+            // 3. Jika sudah habis, sembunyikan loading spinner
+            if (!hasNext) {
+                sentinel.style.display = 'none';
+                observer.unobserve(sentinel); // Matikan pengamat
+            }
+        })
+        .catch(err => {
+            console.error("Gagal load reports:", err);
+            isLoading = false;
+        });
+    }
+});
+</script>
 {% endblock %}

@@ -388,7 +388,7 @@ if (window.__colsp_base_js_loaded) {
 
     // --- 9. Sidebar Nav Animation ---
     (function () {
-      const navItems = document.querySelectorAll(".right-nav .nav-item");
+      const navItems = document.querySelectorAll(".right-nav .nav-item, .bottom-nav .nav-item");
       if (!navItems || !navItems.length) return;
       const path = window.location.pathname;
       navItems.forEach((a) => {
@@ -416,54 +416,59 @@ if (window.__colsp_base_js_loaded) {
     })();
     // --- 10. Guest Account Logout Restriction ---
 (function() {
-        // 1. Cari tombol logout (bisa di sidebar, bisa di halaman profile)
-        // Kita cari semua tombol logout yang ada di halaman (queryAll)
-        const logoutBtns = document.querySelectorAll("form[action*='logout'] button");
+        const STORAGE_KEY = 'colsp_guest_login_time';
         
+        // 1. Cek Status Guest dari Body
+        const isGuest = document.body.getAttribute('data-is-guest') === 'true';
+
+        // === LOGIKA PEMBERSIHAN (PENTING) ===
+        // Jika user yang buka halaman ini BUKAN Guest (misal sudah logout, atau user biasa),
+        // Hapus timer lama dari memori browser.
+        // Jadi pas login guest lagi nanti, timer mulai dari nol.
+        if (!isGuest) {
+            localStorage.removeItem(STORAGE_KEY);
+            return; // Stop, tidak perlu kunci tombol logout
+        }
+
+        // 2. Cari tombol logout
+        const logoutBtns = document.querySelectorAll("form[action*='logout'] button");
         if (logoutBtns.length === 0) return;
 
-        // 2. Cek Status Guest
-        const isGuest = document.body.getAttribute('data-is-guest') === 'true';
-        if (!isGuest) return;
-
-        // 3. Logika Waktu (Persistent)
+        // 3. Logika Waktu
         const LOCK_DURATION = 120; // 120 Detik (2 Menit)
-        const STORAGE_KEY = 'colsp_guest_login_time';
 
-        // Cek kapan guest pertama kali load halaman/login
+        // Cek kapan guest ini mulai login
         let startTime = localStorage.getItem(STORAGE_KEY);
+        
+        // Jika belum ada data (Guest baru masuk), set waktu sekarang
         if (!startTime) {
-            startTime = Math.floor(Date.now() / 1000); // Simpan detik sekarang
+            startTime = Math.floor(Date.now() / 1000); 
             localStorage.setItem(STORAGE_KEY, startTime);
         }
 
-        // Fungsi Update UI Tombol
+        // Fungsi Update UI
         function updateButtons(timeLeft) {
             logoutBtns.forEach(btn => {
-                // Simpan state asli jika belum disimpan
+                // Simpan state asli sekali saja
                 if (!btn.dataset.originalText) {
                     btn.dataset.originalText = btn.innerHTML;
                     btn.dataset.originalClasses = btn.className;
                 }
 
                 if (timeLeft > 0) {
-                    // STATE TERKUNCI
+                    // TERKUNCI
                     btn.disabled = true;
                     btn.style.opacity = "0.6";
                     btn.style.cursor = "not-allowed";
-                    
-                    // Ubah tampilan jadi abu-abu (Hard replace class biar ga glitch)
-                    btn.className = "btn btn-secondary w-100"; 
+                    btn.className = "btn btn-secondary w-100"; // Paksa jadi abu-abu
                     btn.innerHTML = `<i class="fas fa-lock"></i> Wait (${timeLeft}s)`;
                 } else {
-                    // STATE TERBUKA (Waktu Habis)
+                    // TERBUKA
                     btn.disabled = false;
                     btn.style.opacity = "1";
                     btn.style.cursor = "pointer";
-                    
-                    // Kembalikan Class & HTML Asli (Fix masalah hover/ilang)
-                    btn.className = btn.dataset.originalClasses; 
-                    btn.innerHTML = btn.dataset.originalText;
+                    btn.className = btn.dataset.originalClasses; // Balikin warna asli
+                    btn.innerHTML = btn.dataset.originalText;    // Balikin teks asli
                 }
             });
         }
@@ -477,18 +482,17 @@ if (window.__colsp_base_js_loaded) {
             if (remaining <= 0) {
                 clearInterval(timer);
                 updateButtons(0); // Buka kunci
-                // Opsional: Hapus storage biar kalau dia login lagi nanti kena lock lagi
-                // localStorage.removeItem(STORAGE_KEY); 
             } else {
                 updateButtons(remaining);
             }
-        }, 1000); // Update setiap 1 detik
+        }, 1000);
 
-        // Jalankan sekali di awal biar ga nunggu 1 detik buat berubah
+        // Jalankan sekali di awal biar instan
         const initialNow = Math.floor(Date.now() / 1000);
         const initialRem = LOCK_DURATION - (initialNow - parseInt(startTime));
         if (initialRem > 0) updateButtons(initialRem);
 
     })();
+
   })();
 }

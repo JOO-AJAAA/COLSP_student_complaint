@@ -37,42 +37,10 @@ class Report(models.Model):
     def __str__(self):
         return f"{self.title} - {self.author.username}"
 
-    #Helper Methods for Template
-    @property
-    def total_upvotes(self):
-        """Menghitung jumlah reaksi 'agree' (👍) sebagai total upvote"""
-        return self.reactions.filter(type='agree').count()
-    
-    @property
-    def total_reactions_count(self):
-        """Menghitung total semua reaksi (termasuk sad, shock, dll)"""
-        return self.reactions.count()
-
     def is_upvoted_by(self, user):
         """Cek apakah user tertentu sudah like/agree"""
         if not user.is_authenticated: return False
         return self.reactions.filter(user=user, type='agree').exists()
-
-    # Per-type reaction counts (convenience properties for templates)
-    @property
-    def agree_count(self):
-        return self.reactions.filter(type='agree').count()
-
-    @property
-    def support_count(self):
-        return self.reactions.filter(type='support').count()
-
-    @property
-    def sad_count(self):
-        return self.reactions.filter(type='sad').count()
-
-    @property
-    def shock_count(self):
-        return self.reactions.filter(type='shock').count()
-
-    @property
-    def confused_count(self):
-        return self.reactions.filter(type='confused').count()
 
     # Auto Slug Generator
     def save(self, *args, **kwargs):

@@ -363,7 +363,91 @@ textarea.form-control {
   background: rgba(255, 255, 255, 0.08);
 }
 
-@media (max-width: 900px) {
+/* --- MOBILE BOTTOM NAVIGATION (Instagram Style) --- */
+
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 60px; /* Tinggi standar mobile nav */
+  background-color: var(--bg-card);
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-around; /* Bagi rata jarak icon */
+  align-items: center;
+  z-index: 1050; /* Di atas konten lain */
+  padding-bottom: env(safe-area-inset-bottom); /* Untuk iPhone X ke atas */
+  backdrop-filter: blur(10px); /* Efek blur transparan dikit */
+}
+
+.bottom-nav .nav-item {
+  color: var(--text-secondary);
+  font-size: 1.2rem;
+  padding: 10px;
+  border-radius: 50%;
+  transition: color 0.2s ease, transform 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+/* State Aktif (Sedang dibuka) */
+.bottom-nav .nav-item.active {
+  color: var(--text-primary); /* Jadi putih/hitam */
+}
+
+.bottom-nav .nav-item.active i {
+  /* Opsional: Icon jadi agak tebal/solid kalau active */
+  text-shadow: 0 0 10px rgba(255,255,255,0.3); 
+}
+
+/* Avatar Khusus Mobile (Kecil) */
+.mobile-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--border);
+}
+
+.mobile-avatar-default {
+    width: 28px;
+    height: 28px;
+    background: #333;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Highlight border avatar kalau sedang di halaman profile */
+.bottom-nav .nav-item.active .mobile-avatar {
+    border: 2px solid var(--text-primary);
+}
+
+/* --- ADJUST CONTENT PADDING --- */
+/* Penting: Beri jarak di bawah konten utama agar tidak tertutup navbar */
+@media (max-width: 768px) {
+  body {
+    padding-bottom: 70px; /* 60px navbar + 10px space */
+  }
+  
+  /* Sembunyikan sidebar desktop secara paksa jika bootstrap class gagal */
+  .right-sidebar {
+    display: none !important;
+  }
+}
+
+@media (min-width: 769px) {
+  /* Sembunyikan bottom nav di desktop */
+  .bottom-nav {
+    display: none !important;
+  }
+}
+
+@media (max-width: 769px) {
   .right-sidebar {
     display: none;
   }

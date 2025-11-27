@@ -20,8 +20,10 @@
 
   </head>
   <body data-theme="dark" data-is-guest="{{ is_guest_account|yesno:'true,false' }}">
-    {% include 'includes/sidebar.html' %}
+    {%include 'includes/navbar.html'%}
     {%include 'modalSignUp.html'%}
+    <div class="d-none d-md-block">{% include 'includes/sidebar.html' %}</div>
+    <div class="d-block d-md-none">{% include 'includes/bottom_nav.html' %}</div>
     {% block content %} {% endblock %}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
     {% block logic_script_page%}{% endblock %}
