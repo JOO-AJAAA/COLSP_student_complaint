@@ -8,13 +8,14 @@ from .models import OTPRequest
 from reports.models import Report
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
+from django.db.models import Count 
 
 @login_required
 def profile_view(request):
     user = request.user
-    user_reports = Report.objects.filter(author=user).order_by('-created_at')
+    user_reports = Report.objects.filter(author=request.user).annotate(total_reactions_count=Count('reactions')).order_by('-created_at')
     total_reports = user_reports.count()
-    total_impact = sum(r.total_upvotes for r in user_reports)
+    total_impact = sum(r.total_reactions_count for r in user_reports)
     context = {
         'profile_user': request.user,
         'reports': user_reports,
@@ -27,21 +28,23 @@ def profile_view(request):
     return render(request, 'account/profile.html', context)
 
 def public_profile_view(request, username):
-    # Ambil user berdasarkan username di URL. Kalau gak ada, error 404.
     target_user = get_object_or_404(User, username=username)
     
-    # Ambil laporan milik user tersebut
-    user_reports = Report.objects.filter(author=target_user).order_by('-created_at')
+
+    user_reports = Report.objects.filter(author=target_user).annotate(
+        total_reactions_count=Count('reactions')
+    ).order_by('-created_at')
     
-    # Hitung Statistik (Sama seperti sebelumnya)
+    # 3. HITUNG STATISTIK
     total_reports = user_reports.count()
+    
+
     total_impact = sum(r.total_reactions_count for r in user_reports)
 
-    # Kita kirim variabel 'is_me' untuk mengecek apakah kita sedang melihat profil sendiri
     is_me = (request.user == target_user)
 
     context = {
-        'profile_user': target_user, # Gunakan nama variabel baru biar jelas
+        'profile_user': target_user,
         'reports': user_reports,
         'stats': {
             'total_reports': total_reports,
@@ -50,7 +53,6 @@ def public_profile_view(request, username):
         'is_me': is_me,
     }
     
-    # Kita REUSE (Pakai Ulang) template profile.html yang sudah ada
     return render(request, 'account/profile.html', context)
 
 # Create your views here.

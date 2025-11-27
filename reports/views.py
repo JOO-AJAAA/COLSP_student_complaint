@@ -2,6 +2,7 @@ from django.shortcuts import render,get_object_or_404
 from django.core.paginator import Paginator
 from django.template.loader import render_to_string
 from django.http import JsonResponse
+from django.http import HttpResponse, Http404
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
@@ -15,6 +16,8 @@ from .utils import (
 # Import Utility Baru
 from .gemini_utils import generate_report_metadata
 # Create your views here.
+import os
+import mimetypes
 
 def reports(request):
     # 1. Query Dasar (Belum dieksekusi/Lazy)
@@ -81,6 +84,31 @@ def reports(request):
         'reports_list': final_reports_list,
         'has_next': page_obj.has_next() # Untuk inisialisasi JS
     })
+
+def preview_file(request, report_id):
+    report = get_object_or_404(Report, pk=report_id)
+    
+    if not report.attachment:
+        raise Http404("No attachment found")
+
+    file_path = report.attachment.path
+    
+    # Pastikan file ada di disk
+    if not os.path.exists(file_path):
+        raise Http404("File not found on server")
+
+    # Deteksi Mime Type (PDF, Image, dll)
+    content_type, encoding = mimetypes.guess_type(file_path)
+    content_type = content_type or 'application/octet-stream'
+
+    # Buka file
+    with open(file_path, 'rb') as f:
+        response = HttpResponse(f.read(), content_type=content_type)
+    
+    # KUNCI UTAMA: 'inline' berarti buka di browser, 'attachment' berarti download
+    response['Content-Disposition'] = f'inline; filename="{os.path.basename(file_path)}"'
+    
+    return response
 
 @require_POST
 def submit_report_api(request):

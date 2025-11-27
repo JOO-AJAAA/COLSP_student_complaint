@@ -66,14 +66,53 @@
     </section>
 
     <section class="mt-3">
-      {% if report.attachment %}
-      <h6 class="mb-2 text-uppercase small text-secondary">Attachments</h6>
-      <div class="attachment-list">
-        <a href="{{ report.attachment.url }}" target="_blank" class="d-inline-block text-decoration-none" style="color: var(--accent)">
-          📎 {{ report.attachment.name }}
-        </a>
-      </div>
-      {% endif %}
+{% if report.attachment %}
+<div class="attachment-wrapper mt-2">
+    
+    {% with ext=report.attachment.name|lower|slice:"-4:" %}
+    
+    <div class="d-flex align-items-center gap-2 p-2 border rounded bg-dark-subtle">
+        <div class="file-icon">
+            {% if ".pdf" in ext %}<i class="fas fa-file-pdf text-danger fa-2x"></i>
+            {% elif ".jpg" in ext or ".png" in ext or ".jpeg" in ext %}<i class="fas fa-file-image text-info fa-2x"></i>
+            {% elif ".doc" in ext %}<i class="fas fa-file-word text-primary fa-2x"></i>
+            {% else %}<i class="fas fa-file text-secondary fa-2x"></i>{% endif %}
+        </div>
+
+        <div class="file-info flex-grow-1 overflow-hidden">
+            <div class="text-truncate fw-bold small">{{ report.attachment.name }}</div>
+            <div class="small text-muted">Document</div>
+        </div>
+
+        <div class="file-actions">
+            
+            <a href="{{ report.attachment.url }}" download class="btn btn-sm btn-dark border-secondary" title="Download">
+                <i class="fas fa-download"></i>
+            </a>
+
+            {% if ".pdf" in ext or ".jpg" in ext or ".png" in ext %}
+                <a href="{% url 'reports:preview_file' report.id %}" 
+                   class="btn btn-sm btn-primary preview-trigger"
+                   data-file-type="native" 
+                   title="Preview">
+                    <i class="fas fa-eye"></i>
+                </a>
+            
+            {% elif ".doc" in ext or ".ppt" in ext or ".xls" in ext %}
+                <a href="https://docs.google.com/viewer?url={{ request.scheme }}://{{ request.get_host }}{{ report.attachment.url }}&embedded=true" 
+                   class="btn btn-sm btn-primary preview-trigger"
+                   data-file-type="office"
+                   title="Preview">
+                    <i class="fas fa-eye"></i>
+                </a>
+            {% endif %}
+
+        </div>
+    </div>
+    {% endwith %}
+
+</div>
+{% endif %}
     </section>
   </div>
 

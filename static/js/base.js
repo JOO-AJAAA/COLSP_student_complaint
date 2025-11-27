@@ -496,3 +496,32 @@ if (window.__colsp_base_js_loaded) {
 
   })();
 }
+document.addEventListener('click', function(e) {
+    // 1. Cek apakah yang diklik adalah tombol dengan class 'preview-trigger'
+    // Kita pakai .closest() agar kalau user klik ikon <i> di dalam tombol, tetap terdeteksi
+    const trigger = e.target.closest('.preview-trigger');
+    
+    // Jika bukan tombol preview, abaikan
+    if (!trigger) return;
+
+    // 2. Hentikan perilaku default (jangan langsung buka link)
+    e.preventDefault();
+    const url = trigger.href;
+
+    // 3. Deteksi apakah User menggunakan Mobile (HP/Tablet)
+    // Regex sederhana untuk mendeteksi iPhone, iPad, Android
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+    if (isMobile) {
+        // PERILAKU MOBILE:
+        // Buka di tab yang SAMA (window.location).
+        // Ini membiarkan browser HP (Chrome/Safari Mobile) menangani file secara native.
+        // Biasanya HP akan otomatis membuka PDF Viewer atau Gallery tanpa membuka tab baru yang menumpuk.
+        window.location.href = url; 
+    } else {
+        // PERILAKU DESKTOP:
+        // Buka di TAB BARU (_blank).
+        // Agar user tidak kehilangan halaman saat ini dan bisa multitasking.
+        window.open(url, '_blank');
+    }
+});
