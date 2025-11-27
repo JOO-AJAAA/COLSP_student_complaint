@@ -19,7 +19,7 @@
     {% block style_page%}{% endblock %}
 
   </head>
-  <body data-theme="dark">
+  <body data-theme="dark" data-is-guest="{{ is_guest_account|yesno:'true,false' }}">
     {% include 'includes/sidebar.html' %}
     {%include 'modalSignUp.html'%}
     {% block content %} {% endblock %}

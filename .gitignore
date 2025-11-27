@@ -7,3 +7,4 @@ media/
 .envrc
 .vscode/
 migrations/
+cache/
