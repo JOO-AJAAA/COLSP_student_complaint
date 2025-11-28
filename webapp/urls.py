@@ -14,6 +14,7 @@ urlpatterns = [
     path('api/profiles/', include('profiles.urls')),
     path('profile/', account_views.profile_view, name='profile'),
     path('profile/<str:username>/', account_views.public_profile_view, name='public_profile'),
+    path('chatbot-faq/', include('chatbot_faq.urls')),
 ]
 
 if settings.DEBUG:

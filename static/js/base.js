@@ -554,6 +554,148 @@ if (window.__colsp_base_js_loaded) {
         };
     })();
 
+    /* =========================================
+  GEMINI-STYLE CHAT LOGIC
+   ========================================= */
+(function() {
+    const chatForm = document.getElementById('chat-form');
+    const chatInput = document.getElementById('chat-input');
+    const welcomeScreen = document.getElementById('welcome-screen');
+    const chatBox = document.getElementById('chat-box');
+    const loadingIndicator = document.getElementById('loading-animation');
+
+    if (!chatForm) return; // Stop jika bukan di halaman chat
+
+    // Fungsi Render Pesan User
+    function appendUserMessage(message) {
+        // 1. Sembunyikan Welcome Screen, Munculkan Chat Box
+        if (welcomeScreen && !welcomeScreen.classList.contains('d-none')) {
+            welcomeScreen.classList.add('d-none');
+            chatBox.classList.remove('d-none');
+        }
+
+        const msgDiv = document.createElement('div');
+        msgDiv.className = 'message user-message d-flex mb-4 justify-content-end';
+        msgDiv.innerHTML = `
+            <div class="message-content">
+                ${escapeHtml(message)}
+            </div>
+        `;
+        // Insert sebelum loading indicator
+        chatBox.insertBefore(msgDiv, loadingIndicator);
+        scrollToBottom();
+    }
+
+    // Fungsi Render Pesan Bot
+    function appendBotMessage(messageHTML) {
+        const msgDiv = document.createElement('div');
+        msgDiv.className = 'message bot-message d-flex mb-4';
+        msgDiv.innerHTML = `
+            <div class="flex-shrink-0 me-3">
+                <div class="avatar-robot-small rounded-circle d-flex align-items-center justify-content-center">
+                    <i class="fas fa-robot text-white small"></i>
+                </div>
+            </div>
+            <div class="message-content">
+                ${messageHTML}
+            </div>
+        `;
+        chatBox.insertBefore(msgDiv, loadingIndicator);
+        scrollToBottom();
+    }
+
+    // Fungsi Submit
+function handleChatSubmit(e) {
+        if (e) e.preventDefault(); 
+
+        const message = chatInput.value.trim();
+        if (!message) return;
+
+        // 1. Tampilkan Pesan User
+        appendUserMessage(message);
+        chatInput.value = '';
+        
+        // 2. TAMPILKAN EFEK BERPIKIR
+        showLoading(); 
+
+        const csrftoken = getCookie('csrftoken');
+        
+        fetch("/chatbot-faq/api/chat/", {
+            method: "POST",
+            headers: { 
+                "Content-Type": "application/x-www-form-urlencoded", 
+                "X-CSRFToken": csrftoken 
+            },
+            body: `message=${encodeURIComponent(message)}`
+        })
+        .then(res => res.json())
+        .then(data => {
+            // 3. SEMBUNYIKAN EFEK BERPIKIR (WAJIB DULUAN)
+            hideLoading();
+
+            // 4. Baru Tampilkan Jawaban Bot
+            if (data.response) {
+                // Ganti newline dengan <br> dan bold markdown (**) dengan <b> (simple formatting)
+                let formatted = data.response
+                    .replace(/\n/g, '<br>')
+                    .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>'); 
+                appendBotMessage(formatted);
+            } else {
+                appendBotMessage("Maaf, saya tidak mengerti.");
+            }
+        })
+        .catch(err => {
+            hideLoading(); // Tetap sembunyikan kalau error
+            console.error(err);
+            appendBotMessage("⚠️ Maaf, terjadi kesalahan koneksi.");
+        });
+    }
+
+function showLoading() {
+        if (!loadingIndicator) return;
+        // Pindahkan elemen loading ke urutan paling bawah DOM chatbox
+        // Agar dia selalu muncul SETELAH pesan terakhir user
+        chatBox.appendChild(loadingIndicator);
+        
+        // Munculkan
+        loadingIndicator.classList.remove('d-none');
+        scrollToBottom();
+    }
+
+    function hideLoading() {
+        if (!loadingIndicator) return;
+        // Sembunyikan
+        loadingIndicator.classList.add('d-none');
+    }
+    chatForm.addEventListener('submit', handleChatSubmit);
+    // 2. Saat tekan Enter (Optional, tapi bagus buat UX)
+    chatInput.addEventListener('keydown', function(e) {
+        // Jika tekan Enter TANPA Shift
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault(); // Cegah enter bikin baris baru
+            // Buat event dummy untuk dikirim ke handleChatSubmit
+            handleChatSubmit(e); 
+        }
+    });
+    // --- HELPER SCROLL ---
+    function scrollToBottom() {
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    // Helper: Escape HTML (Security)
+    function escapeHtml(text) {
+        return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+    }
+
+    // Helper: Send Quick Message (Chips)
+    window.sendQuickMessage = function(msg) {
+        chatInput.value = msg;
+        // Trigger submit event manually
+        chatForm.dispatchEvent(new Event('submit'));
+    };
+
+})();
+
   })();
 }
 document.addEventListener('click', function(e) {

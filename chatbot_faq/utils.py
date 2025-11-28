@@ -4,8 +4,10 @@ from django.conf import settings
 
 # --- KONFIGURASI FINAL ---
 
-# 1. LLM (Tetap Zephyr) - Otak Chatbot
-HF_LLM_URL = "https://router.huggingface.co/hf-inference/models/HuggingFaceH4/zephyr-7b-beta"
+# 1. LLM: Qwen 2.5 (Sangat Pintar & Logis)
+HF_CHAT_URL = "https://router.huggingface.co/v1/chat/completions"
+# Kita pakai model 72B (paling pintar) atau 7B (lebih cepat)
+HF_MODEL_ID = "Qwen/Qwen2.5-72B-Instruct"
 
 # 2. EMBEDDING (GANTI KE MULTILINGUAL E5)
 # Model ini support Bahasa Indonesia dan outputnya 768 dimensi (Aman untuk DB Anda)
@@ -22,9 +24,7 @@ def get_embedding(text):
     # PERBAIKAN PENTING UNTUK MODEL E5:
     # Model E5 bekerja paling baik jika kita kasih awalan "query:" atau "passage:"
     # Tapi untuk simplifikasi agar tidak error dimensi, kita kirim raw text dalam list.
-    print(headers)
     payload = {"inputs": [text]} 
-    print(payload)
     for attempt in range(3):
         try:
             response = requests.post(HF_EMBED_URL, headers=headers, json=payload, timeout=20)
@@ -46,7 +46,7 @@ def get_embedding(text):
             
             # MODEL LOADING (503)
             elif response.status_code == 503:
-                wait = response.json().get('estimated_time', 5)
+                wait = response.json().get('estimated_time', 10)
                 print(f"🔄 Embedding API Loading... Tunggu {wait}s")
                 time.sleep(wait)
                 continue
@@ -61,42 +61,41 @@ def get_embedding(text):
             return None
     return None
 
+# --- FUNGSI CHAT BARU (QWEN) ---
 def generate_response_huggingface(prompt):
     """
-    Generate response chat
+    Menggunakan Endpoint Chat Completions (OpenAI Style).
+    Lebih stabil dan pintar.
     """
-    # Prompt Template Zephyr
-    formatted_prompt = f"<|system|>\nKamu adalah asisten kampus yang membantu menjawab pertanyaan mahasiswa dalam Bahasa Indonesia.<|end|>\n<|user|>\n{prompt}<|end|>\n<|assistant|>"
-
+    
+    # Payload standar OpenAI/Qwen
     payload = {
-        "inputs": formatted_prompt,
-        "parameters": {
-            "max_new_tokens": 512, 
-            "temperature": 0.7,
-            "return_full_text": False
-        }
+        "model": HF_MODEL_ID,
+        "messages": [
+            {"role": "user", "content": prompt}
+        ],
+        "max_tokens": 512,
+        "temperature": 0.7,
+        "stream": False # Matikan stream biar bisa disimpan ke DB
     }
 
     for attempt in range(3):
         try:
-            response = requests.post(HF_LLM_URL, headers=headers, json=payload, timeout=40)
+            response = requests.post(HF_CHAT_URL, headers=headers, json=payload, timeout=60)
             
             if response.status_code == 200:
                 result = response.json()
-                if isinstance(result, list) and len(result) > 0 and 'generated_text' in result[0]:
-                    return result[0]['generated_text'].strip()
-                return str(result)
+                # Ambil text dari struktur JSON OpenAI
+                return result['choices'][0]['message']['content'].strip()
             
-            elif response.status_code == 503:
-                print(f"🔄 Chat API Loading...")
-                time.sleep(5)
+            elif response.status_code == 503: # Loading
                 continue
             
             else:
-                print(f"❌ Chat API Error {response.status_code}: {response.text}")
+                print(f"❌ Qwen Error {response.status_code}: {response.text}")
                 return f"Maaf, server AI sedang sibuk ({response.status_code})."
 
         except Exception as e:
-            print(f"⚠️ Chat Connection Error: {e}")
+            print(f"⚠️ Qwen Connection Error: {e}")
             
-    return "Maaf, tidak dapat terhubung ke otak AI."
+    return "Maaf, Qwen sedang tidak bisa dihubungi."

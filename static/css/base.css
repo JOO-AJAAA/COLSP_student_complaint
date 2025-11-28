@@ -682,3 +682,171 @@ textarea.form-control {
     0%, 100% { opacity: 1; }
     50% { opacity: 0; }
 }
+
+/* --- GEMINI STYLE CHATBOT --- */
+
+.chat-layout {
+    height: 100vh;
+    background-color: var(--bg-primary);
+    overflow: hidden; /* Biar ga ada scroll body */
+}
+
+/* Gradient Text (Hello User) */
+.gemini-greeting {
+    font-size: 3.5rem;
+    font-weight: 700;
+    letter-spacing: -1px;
+    background: linear-gradient(90deg, #4285F4, #9B72CB, #F86868); /* Warna Google/Gemini */
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent; /* Agar gradient terlihat */
+}
+
+@media (max-width: 768px) {
+    .gemini-greeting { font-size: 2.2rem; }
+}
+
+/* Chips (Tombol Saran) */
+.gemini-chip {
+    background-color: var(--input-bg);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    padding: 12px 20px;
+    border-radius: 16px; /* Pill Shape */
+    cursor: pointer;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.2s ease;
+    min-width: 140px;
+    justify-content: center;
+}
+
+.gemini-chip:hover {
+    background-color: var(--hover);
+    transform: translateY(-2px);
+    border-color: var(--text-secondary);
+}
+
+/* Chat History Area */
+.chat-history {
+    flex-grow: 1;
+    overflow-y: auto;
+    scroll-behavior: smooth;
+    max-width: 900px; /* Batasi lebar biar enak dibaca */
+    margin: 0 auto;
+    /* Hide scrollbar */
+    scrollbar-width: none; 
+}
+.chat-history::-webkit-scrollbar { display: none; }
+
+/* Input Wrapper (Floating) */
+.chat-input-wrapper {
+    background: transparent; /* Transparan biar nyatu */
+    max-width: 850px;
+    margin: 0 auto;
+}
+
+/* The Input Bar Itself */
+.input-container {
+    background-color: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: 50px; /* Rounded banget */
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.input-container:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(74, 222, 128, 0.1); /* Glow dikit */
+}
+
+.gemini-input {
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    width: 100%;
+    font-size: 1rem;
+    padding: 5px;
+    outline: none;
+}
+
+.gemini-send-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 1.2rem;
+    padding: 8px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.gemini-send-btn:hover {
+    background-color: var(--bg-card);
+    color: var(--accent);
+}
+
+/* Chat Bubbles (Clean Style) */
+.message-content {
+    line-height: 1.6;
+    font-size: 1rem;
+}
+
+/* User Bubble (Minimalis) */
+.user-message .message-content {
+    background-color: var(--input-bg); /* Abu gelap */
+    color: var(--text-primary);
+    border-radius: 20px;
+    padding: 12px 20px;
+    max-width: 80%;
+    margin-left: auto; /* Rata kanan */
+}
+
+/* Bot Bubble (No Background, Just Text + Icon) */
+.bot-message {
+    align-items: flex-start;
+}
+.bot-message .message-content {
+    background: transparent;
+    color: var(--text-primary);
+    padding: 5px 0;
+    max-width: 90%;
+}
+
+.avatar-robot-small {
+    width: 32px;
+    height: 32px;
+    background: linear-gradient(135deg, #00c6ff, #0072ff);
+    box-shadow: 0 0 10px rgba(0, 114, 255, 0.4);
+}
+
+/* --- TYPING / THINKING ANIMATION --- */
+.typing-dots {
+    display: inline-flex;
+    align-items: center;
+    height: 20px;
+}
+
+.typing-dots span {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background-color: var(--text-secondary); /* Warna abu-abu */
+    border-radius: 50%;
+    margin: 0 3px;
+    opacity: 0.6;
+    animation: typingWave 1.4s infinite ease-in-out both;
+}
+
+.typing-dots span:nth-child(1) { animation-delay: -0.32s; }
+.typing-dots span:nth-child(2) { animation-delay: -0.16s; }
+.typing-dots span:nth-child(3) { animation-delay: 0s; }
+
+@keyframes typingWave {
+    0%, 80%, 100% { transform: scale(0); opacity: 0.5; }
+    40% { transform: scale(1); opacity: 1; }
+}

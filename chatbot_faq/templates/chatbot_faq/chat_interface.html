@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid chat-layout position-relative">
+    <div class="row justify-content-center h-100">
+
+        <div class="col-12 col-md-9 col-lg-8 p-0 h-100 d-flex flex-column align-items-center">
+            
+            <div id="welcome-screen" class="flex-grow-1 d-flex flex-column justify-content-center align-items-center text-center w-100 px-3">
+                
+                <h1 class="gemini-greeting mb-2">
+                    Hello, {{ request.user.first_name|default:request.user.username }}
+                </h1>
+                <h3 class="text-secondary mb-5" style="font-weight: 400;">
+                    Ada yang bisa saya bantu terkait kampus?
+                </h3>
+
+                <div class="d-flex flex-wrap justify-content-center gap-3 w-100" style="max-width: 800px;">
+                    <button class="gemini-chip" onclick="sendQuickMessage('Cara pakai web ini?')">
+                        <i class="fas fa-question-circle text-warning"></i>
+                        <span>Cara Pakai</span>
+                    </button>
+                    <button class="gemini-chip" onclick="sendQuickMessage('Info pembayaran UKT')">
+                        <i class="fas fa-money-bill-wave text-success"></i>
+                        <span>Info UKT</span>
+                    </button>
+                    <button class="gemini-chip" onclick="sendQuickMessage('Fasilitas Kampus')">
+                        <i class="fas fa-building text-info"></i>
+                        <span>Fasilitas</span>
+                    </button>
+                    <button class="gemini-chip" onclick="sendQuickMessage('Beasiswa tersedia')">
+                        <i class="fas fa-graduation-cap text-primary"></i>
+                        <span>Beasiswa</span>
+                    </button>
+                </div>
+            </div>
+
+            <div id="chat-box" class="chat-history w-100 px-3 px-md-5 py-4 d-none">
+                <div id="loading-animation" class="message bot-message d-flex mb-4 d-none">
+                    <div class="flex-shrink-0 me-3">
+                        <div class="avatar-robot-small rounded-circle d-flex align-items-center justify-content-center bg-secondary">
+                            <i class="fas fa-robot text-white small fa-fade"></i>
+                        </div>
+                    </div>
+                    <div class="message-content py-2 px-3 bg-transparent">
+                        <div class="typing-dots">
+                            <span></span><span></span><span></span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="chat-input-wrapper w-100 px-3 pb-4 pt-2">
+                <div class="input-container">
+                    <form id="chat-form" class="d-flex align-items-center w-100" onsubmit="return false;">
+                        <input 
+                            type="text" 
+                            id="chat-input" 
+                            class="gemini-input" 
+                            placeholder="Tanya YALQKA..." 
+                            autocomplete="off"
+                            required
+                        >
+                        <button type="submit" class="gemini-send-btn">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </form>
+                </div>
+                <div class="text-center mt-2">
+                    <small class="text-muted" style="font-size: 0.75rem;">
+                        YALQKA bisa salah. Cek kembali informasi penting.
+                    </small>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

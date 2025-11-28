@@ -1,8 +1,5 @@
 {% extends "base.html" %}
 {% load static %}
-{% block style_page %}
-    <link rel="stylesheet" type="text/css" href="{% static 'css/base.css' %}"/>
-{% endblock %}
 {% block content %}
 <div class="container py-5">
     <div class="row">
@@ -70,7 +67,7 @@
 
             {% if reports %}
                 {% for report in reports %}
-                
+
                     {% include 'reports/report_post.html' with report=report %}
                 {% endfor %}
             {% else %}
@@ -87,7 +84,4 @@
 </div>
 
 {% include 'includes/sidebar.html' %}
-{% endblock %}
-{% block logic_script_page %}
-    <script src="{% static 'js/base.js' %}"></script>
 {% endblock %}

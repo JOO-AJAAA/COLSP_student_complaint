@@ -2,9 +2,9 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
 from pgvector.django import L2Distance
-from django.contrib.postgres.search import SearchVector # Import ini
+from django.contrib.postgres.search import SearchVector 
 from django.db.models import Q
-
+from django.shortcuts import render
 from .models import ChatMessage, KnowledgeChunk
 from .utils import get_embedding, generate_response_huggingface
 
@@ -123,3 +123,15 @@ def chat_api(request):
     )
 
     return JsonResponse({'response': ai_answer})
+
+@login_required
+def chat_page(request):
+    """
+    Merender halaman antarmuka Chatbot YALQKA.
+    """
+    # Kita bisa kirim konteks tambahan jika perlu (misal nama user)
+    context = {
+        'bot_name': 'YALQKA',
+        'welcome_message': f"Halo {request.user.first_name or request.user.username}! Saya YALQKA, asisten cerdas kampus. Ada yang bisa saya bantu?"
+    }
+    return render(request, 'chatbot_faq/chat_interface.html', context)
