@@ -10,49 +10,94 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Count 
 
+# Helper function agar kita tidak menulis ulang logika avatar berulang kali
+def attach_report_metadata(report_list):
+    try:
+        from allauth.socialaccount.models import SocialAccount
+    except ImportError:
+        SocialAccount = None
+
+    for r in report_list:
+        # 1. Logika Nama
+        author_name = r.author.get_full_name() or r.author.username
+        
+        # 2. Logika Avatar
+        avatar_url = ''
+        try:
+            prof = getattr(r.author, 'profile', None)
+            if prof and getattr(prof, 'avatar_animal', None):
+                avatar_url = f"/static/account/img/{prof.avatar_animal}.svg"
+        except Exception:
+            pass
+
+        if not avatar_url and SocialAccount:
+            sa = SocialAccount.objects.filter(user=r.author).first()
+            if sa:
+                extra = getattr(sa, 'extra_data', {}) or {}
+                avatar_url = extra.get('picture') or extra.get('avatar_url') or ''
+
+        # Tempel atribut ke objek report (PENTING!)
+        setattr(r, 'author_display_name', author_name)
+        setattr(r, 'author_avatar_url', avatar_url)
+        
+        # 3. Logika Reaction Counts (Karena models.py property dihapus)
+        # Ambil semua reaction dari prefetch (pastikan view memanggil prefetch)
+        # Jika tidak di prefetch, ini akan lambat (N+1 query)
+        all_reactions = r.reactions.all()
+        
+        r.agree_count = sum(1 for x in all_reactions if x.type == 'agree')
+        r.support_count = sum(1 for x in all_reactions if x.type == 'support')
+        r.sad_count = sum(1 for x in all_reactions if x.type == 'sad')
+        r.shock_count = sum(1 for x in all_reactions if x.type == 'shock')
+        r.confused_count = sum(1 for x in all_reactions if x.type == 'confused')
+        r.total_reactions_count = len(all_reactions)
+
+# --- VIEWS UTAMA ---
+
 @login_required
 def profile_view(request):
-    user = request.user
-    user_reports = Report.objects.filter(author=request.user).annotate(total_reactions_count=Count('reactions')).order_by('-created_at')
+    # Gunakan prefetch_related('reactions') agar hitungan reaction cepat
+    user_reports = Report.objects.filter(author=request.user)\
+                                .select_related('author')\
+                                .prefetch_related('reactions')\
+                                .order_by('-created_at')
+    
+    # JALANKAN HELPER DI SINI
+    attach_report_metadata(user_reports)
+    
     total_reports = user_reports.count()
     total_impact = sum(r.total_reactions_count for r in user_reports)
+
     context = {
         'profile_user': request.user,
         'reports': user_reports,
-        'stats': {
-            'total_reports': total_reports,
-            'total_impact': total_impact,
-        },
-        'is_me': True,
+        'stats': {'total_reports': total_reports, 'total_impact': total_impact},
+        'is_me': True
     }
     return render(request, 'account/profile.html', context)
 
 def public_profile_view(request, username):
     target_user = get_object_or_404(User, username=username)
     
+    # Gunakan prefetch_related('reactions')
+    user_reports = Report.objects.filter(author=target_user)\
+                                .select_related('author')\
+                                .prefetch_related('reactions')\
+                                .order_by('-created_at')
 
-    user_reports = Report.objects.filter(author=target_user).annotate(
-        total_reactions_count=Count('reactions')
-    ).order_by('-created_at')
-    
-    # 3. HITUNG STATISTIK
+    # JALANKAN HELPER DI SINI
+    attach_report_metadata(user_reports)
+
     total_reports = user_reports.count()
-    
-
     total_impact = sum(r.total_reactions_count for r in user_reports)
-
     is_me = (request.user == target_user)
 
     context = {
         'profile_user': target_user,
         'reports': user_reports,
-        'stats': {
-            'total_reports': total_reports,
-            'total_impact': total_impact
-        },
+        'stats': {'total_reports': total_reports, 'total_impact': total_impact},
         'is_me': is_me,
     }
-    
     return render(request, 'account/profile.html', context)
 
 # Create your views here.

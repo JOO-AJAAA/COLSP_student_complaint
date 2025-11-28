@@ -1,49 +1,57 @@
 {% load static %}
 <article class="report-post card mb-4 shadow-sm">
   
-  <header class="card-header d-flex align-items-center" style="background: transparent; border-bottom: 0">
-    <div class="me-3">
-      <a href="{% url 'public_profile' report.author.username %}" class="text-decoration-none">
-      {% if report.author_avatar_url %}
-      <img
-        src="{{ report.author_avatar_url }}"
-        class="rounded-circle"
-        alt="{{ report.author_display_name }}"
-        style="width: 48px; height: 48px;user-select: none;"
-        draggable="false"
-      />
-      </a>
-      {% else %}
-      <div
-        class="avatar-fallback rounded-circle d-flex align-items-center justify-content-center"
-        style="width: 48px; height: 48px; background-color: var(--hover); color: var(--text-primary);user-select: none;"
-      >
-        <i class="fas fa-user"></i>
-      </div>
-      {% endif %}
-    </div>
-    <div class="flex-grow-1">
-      <div class="d-flex justify-content-between align-items-start">
-        <div>
-          <div class="small mb-2" style="color: var(--text-secondary)">
-            <i class="fas fa-tag me-1"></i>
-            <span class="fw-bold">{{ report.get_category_display }}</span>
-            <span class="mx-1">•</span>
-            <i class="far fa-clock me-1"></i>
-            {{ report.created_at|date:"d M Y, H:i" }} WIB
+<header class="card-header border-bottom-0 bg-transparent pt-3 pb-0 px-3">
+    <div class="d-flex align-items-center">
+      
+      <div class="flex-shrink-0 me-3">
+        <a href="{% url 'public_profile' report.author.username %}" class="text-decoration-none">
+          {% if report.author_avatar_url %}
+          <img
+            src="{{ report.author_avatar_url }}"
+            class="rounded-circle border border-secondary border-opacity-25"
+            alt="{{ report.author_display_name }}"
+            style="width: 42px; height: 42px; object-fit: cover;"
+            draggable="false"
+          />
+          {% else %}
+          <div
+            class="rounded-circle d-flex align-items-center justify-content-center bg-secondary bg-opacity-25 text-secondary"
+            style="width: 42px; height: 42px;"
+          >
+            <i class="fas fa-user"></i>
           </div>
-          <h5 class="card-title mb-0">
-            <a href="{% url 'public_profile' report.author.username %}" class="text-decoration-none text-reset" style="user-select: none;" draggable="false">
-              <strong>{{ report.author_display_name }}</strong>
-            </a>
-          </h5>
+          {% endif %}
+        </a>
+      </div>
+
+      <div class="flex-grow-1 min-width-0">
+        
+        <div class="d-flex justify-content-between align-items-center">
+            
+            <h6 class="mb-0 fw-bold lh-1">
+                <a href="{% url 'public_profile' report.author.username %}" class="text-decoration-none text-reset">
+                    {{ report.author_display_name }}
+                </a>
+            </h6>
+
+            <span class="badge rounded-pill bg-dark-subtle text-body-secondary border border-secondary border-opacity-25" style="font-size: 0.7rem; font-weight: 500;">
+                {{ report.get_status_display }}
+            </span>
         </div>
 
-        <div class="small text-end ms-3">
-          <span class="badge bg-info text-dark ms-1">
-            {{ report.get_status_display }}
-          </span>
+        <div class="small text-secondary mt-1 text-truncate">
+            <span class="fw-medium text-body">
+                <i class="fas fa-hashtag me-1 text-accent" style="font-size: 0.8em;"></i>{{ report.get_category_display }}
+            </span>
+            
+            <span class="mx-1 opacity-50">•</span>
+            
+            <span class="opacity-75" title="{{ report.created_at }}">
+                {{ report.created_at|timesince }} ago
+            </span>
         </div>
+
       </div>
     </div>
   </header>
