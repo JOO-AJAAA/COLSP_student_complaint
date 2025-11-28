@@ -96,6 +96,7 @@ DATABASES = {
         'PASSWORD': os.getenv('DB_PASSWORD'),
         'HOST': os.getenv('DB_HOST'),  # Or the IP/hostname of your MySQL server
         'PORT': os.getenv('DB_PORT'),   # Default MySQL port
+        'OPTIONS': {'charset': 'utf8mb4','use_unicode': True,'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"},
     }
 }
 

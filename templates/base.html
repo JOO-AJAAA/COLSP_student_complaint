@@ -25,6 +25,16 @@
     <div class="d-none d-md-block">{% include 'includes/sidebar.html' %}</div>
     <div class="d-block d-md-none">{% include 'includes/bottom_nav.html' %}</div>
     {% block content %} {% endblock %}
+
+<div id="chat-welcome-bubble" class="chat-bubble">
+    <div class="chat-bubble-content">
+        <span class="close-bubble" onclick="dismissBubble()">&times;</span>
+        <p class="mb-0 fw-bold">👋 Hi, Student!</p>
+        <p class="small mb-0" id="typewriter-text"></p> 
+    </div>
+    <div class="chat-arrow"></div>
+</div>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
     {% block logic_script_page%}{% endblock %}
   </body>

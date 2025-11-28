@@ -1,5 +1,7 @@
 from django.contrib import admin
 from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
 from . import views
 from profiles import views as account_views
 
@@ -13,3 +15,6 @@ urlpatterns = [
     path('profile/', account_views.profile_view, name='profile'),
     path('profile/<str:username>/', account_views.public_profile_view, name='public_profile'),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

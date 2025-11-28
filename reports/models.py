@@ -20,7 +20,7 @@ class Report(models.Model):
     
     # PERBAIKAN 1: Ganti ImageField ke FileField
     # So that you can upload PDF/DOCX files to be parsed by our filtering system.
-    attachment = models.FileField(upload_to='media/', blank=True, null=True)
+    attachment = models.FileField(upload_to='report_attachments/', blank=True, null=True)
     
     # AI Fields
     ai_summary = models.TextField(blank=True, null=True, help_text="Ringkasan otomatis by Gemini")

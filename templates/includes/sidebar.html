@@ -30,6 +30,7 @@
             src="{{ user.socialaccount_set.all.0.get_avatar_url }}"
             alt="Profile"
             class="profile-avatar"
+            style="user-select: none;" draggable="false"
             />
 
         {% elif user.profile.avatar_animal %}
@@ -37,7 +38,7 @@
             src="{% static 'account/img/' %}{{ user.profile.avatar_animal }}.svg"
             alt="Avatar"
             class="profile-avatar"
-            style="background-color: #f0f0f0; padding: 2px;" 
+            style="background-color: #f0f0f0; padding: 2px; user-select: none;" draggable="false"
             />
 
         {% else %}

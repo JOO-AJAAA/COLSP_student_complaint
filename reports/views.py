@@ -186,7 +186,7 @@ def submit_report_api(request):
                      (toxic_score_desc * 0.4) + \
                      (attachment_penalty_score * 0.4)
 
-    if weighted_score > 0.44:
+    if weighted_score > 0.42:
         return JsonResponse({
             'status': 'rejected',
             'reason': 'violation',

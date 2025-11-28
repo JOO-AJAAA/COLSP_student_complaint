@@ -13,9 +13,9 @@
                     
                     <div class="mb-3 position-relative d-inline-block">
                         {% if profile_user.socialaccount_set.count %}
-                            <img src="{{ profile_user.socialaccount_set.all.0.get_avatar_url }}" class="rounded-circle border border-2 border-success" style="width: 120px; height: 120px; object-fit: cover;">
+                            <img src="{{ profile_user.socialaccount_set.all.0.get_avatar_url }}" class="rounded-circle border border-2 border-success" style="width: 120px; height: 120px; object-fit: cover;user-select: none;" alt="{{ profile_user.username }} avatar" draggable="false">
                         {% elif profile_user.profile.avatar_animal %}
-                            <img src="{% static 'account/img/' %}{{ profile_user.profile.avatar_animal }}.svg" class="rounded-circle border border-2 border-success p-2 bg-light" style="width: 120px; height: 120px; object-fit: cover;" alt="{{ profile_user.username }} avatar">
+                            <img src="{% static 'account/img/' %}{{ profile_user.profile.avatar_animal }}.svg" class="rounded-circle border border-2 border-success p-2 bg-light" style="width: 120px; height: 120px; object-fit: cover;user-select: none;" alt="{{ profile_user.username }} avatar" draggable="false">
                         {% else %}
                             <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center mx-auto" style="width: 120px; height: 120px; font-size: 3rem;">
                                 {{ profile_user.username|slice:":1"|upper }}
@@ -70,6 +70,7 @@
 
             {% if reports %}
                 {% for report in reports %}
+                
                     {% include 'reports/report_post.html' with report=report %}
                 {% endfor %}
             {% else %}

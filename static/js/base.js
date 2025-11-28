@@ -494,6 +494,66 @@ if (window.__colsp_base_js_loaded) {
 
     })();
 
+// --- WELCOME BUBBLE LOGIC (TYPING + AUTO DISMISS) ---
+    (function() {
+        const bubble = document.getElementById('chat-welcome-bubble');
+        const textElement = document.getElementById('typewriter-text');
+        const message = "Bingung soal UKT atau Fasilitas? Tanya aku di sini!";
+        
+        if (!bubble || !textElement) return;
+
+        // Cek localStorage
+        const hasSeen = localStorage.getItem('colsp_chat_welcome_seen');
+        if (hasSeen) return; 
+
+        // 1. Munculkan Bubble (Delay dikit pas load biar smooth)
+        setTimeout(() => {
+            bubble.style.display = 'block';
+            startTyping();
+        }, 1000);
+
+        function startTyping() {
+            let i = 0;
+            const speed = 50; // Kecepatan ketik (ms per huruf)
+
+            function type() {
+                if (i < message.length) {
+                    textElement.innerHTML += message.charAt(i);
+                    i++;
+                    setTimeout(type, speed);
+                } else {
+                    // 2. Selesai Ngetik -> Hapus Kursor kedip
+                    const style = document.createElement('style');
+                    style.innerHTML = "#typewriter-text::after { content: ''; }"; 
+                    document.head.appendChild(style);
+
+                    // 3. Mulai Hitung Mundur 5 Detik
+                    setTimeout(autoDismiss, 5000);
+                }
+            }
+            type();
+        }
+
+        function autoDismiss() {
+            // Tambahkan class CSS fade-out
+            bubble.classList.add('fade-out');
+            
+            // Tunggu animasi CSS selesai (1 detik), baru display none
+            setTimeout(() => {
+                bubble.style.display = 'none';
+                // Jangan simpan localStorage jika hilang otomatis (biar muncul lagi next session)
+                // Atau simpan jika mau permanen hilang:
+                // localStorage.setItem('colsp_chat_welcome_seen', 'true'); 
+            }, 1000);
+        }
+
+        // Fungsi tutup manual (Klik X)
+        window.dismissBubble = function() {
+            bubble.style.display = 'none';
+            localStorage.setItem('colsp_chat_welcome_seen', 'true'); // Permanen hilang
+        };
+    })();
+
   })();
 }
 document.addEventListener('click', function(e) {
