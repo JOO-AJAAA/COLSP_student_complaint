@@ -3,6 +3,7 @@ import time
 from django.conf import settings
 from google import genai
 from google.genai import types
+from sentence_transformers import SentenceTransformer
 # --- KONFIGURASI FINAL ---
 
 # --- KONFIGURASI GEMINI ---
@@ -10,7 +11,20 @@ from google.genai import types
 
 # 2. EMBEDDING (GANTI KE MULTILINGUAL E5)
 # Model ini support Bahasa Indonesia dan outputnya 768 dimensi (Aman untuk DB Anda)
-HF_EMBED_URL = "https://router.huggingface.co/hf-inference/models/intfloat/multilingual-e5-large/pipeline/feature-extraction"
+MODEL_NAME = "intfloat/multilingual-e5-large"
+HF_EMBED_URL = f"https://router.huggingface.co/hf-inference/models/{MODEL_NAME}/"
+
+local_embedder = None
+if getattr(settings, 'USE_LOCAL_EMBEDDING', False):
+    # print(f"🖥️  Mode Development: Loading Model '{MODEL_NAME}' ke RAM Laptop...")
+    # try:
+    #     
+        # Download otomatis saat pertama kali jalan (~2GB)
+    local_embedder = SentenceTransformer(MODEL_NAME)
+    #     print("✅ Model Lokal Siap!")
+    # except ImportError:
+    #     print("❌ Library 'sentence-transformers' belum diinstall! Fallback ke API.")
+    #     local_embedder = None
 
 headers = {"Authorization": f"Bearer {settings.HUGGINGFACE_API_KEY}"}
 
@@ -21,44 +35,40 @@ def get_embedding(text):
     if not text: return None
     
     # PERBAIKAN PENTING UNTUK MODEL E5:
-    # Model E5 bekerja paling baik jika kita kasih awalan "query:" atau "passage:"
-    # Tapi untuk simplifikasi agar tidak error dimensi, kita kirim raw text dalam list.
-    payload = {"inputs": [text]} 
-    for attempt in range(3):
+    if local_embedder:
         try:
-            response = requests.post(HF_EMBED_URL, headers=headers, json=payload, timeout=20)
-            print(response.status_code)
-            # SUKSES (200)
-            if response.status_code == 200:
-                data = response.json()
-                
-                # Normalisasi output (kadang list of list, kadang flat)
-                if isinstance(data, list):
-                    # Jika output [[0.1, 0.2...]] (Batch size 1)
-                    if len(data) > 0 and isinstance(data[0], list):
-                        return data[0]
-                    # Jika output [0.1, 0.2...] (Flat)
-                    return data
-                
-                print(f"⚠️ Format Vector Aneh: {str(data)[:50]}...")
-                return None
-            
-            # MODEL LOADING (503)
-            elif response.status_code == 503:
-                wait = response.json().get('estimated_time', 5)
-                print(f"🔄 Embedding API Loading... Tunggu {wait}s")
-                time.sleep(wait)
-                continue
-            
-            # ERROR LAIN
-            else:
-                print(f"❌ Embed API Error {response.status_code}: {response.text}")
-                return None
-
+            # Perbaikan format E5: Tambahkan 'query: ' atau 'passage: '
+            # Tapi untuk simpel, raw text dulu gpp.
+            vector = local_embedder.encode(text, normalize_embeddings=True)
+            return vector.tolist() # Ubah numpy array ke list biasa
         except Exception as e:
-            print(f"⚠️ Embed Connection Error: {e}")
+            print(f"❌ Local Embed Error: {e}")
             return None
-    return None
+
+    # JALUR 2: API (Production)
+    else:
+        payload = {"inputs": [text]} 
+        for attempt in range(3):
+            try:
+                response = requests.post(HF_EMBED_URL, headers=headers, json=payload, timeout=20)
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    if isinstance(data, list):
+                        if len(data) > 0 and isinstance(data[0], list): return data[0]
+                    return data
+                    return None
+                
+                elif response.status_code == 503:
+                    time.sleep(5)
+                    continue
+                else:
+                    print(f"API Error {response.status_code}: {response.text}")
+                    return None
+            except Exception as e:
+                print(f"Connection Error: {e}")
+                
+        return None
 
 # --- FUNGSI CHAT BARU (GEMINI) ---
 def generate_response_huggingface(prompt):

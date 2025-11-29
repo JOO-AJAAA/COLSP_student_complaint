@@ -161,7 +161,11 @@ SOCIALACCOUNT_PROVIDERS = {
         ],
     }
 }
+
+USE_LOCAL_EMBEDDING = os.getenv('USE_LOCAL_EMBEDDING', 'True') == 'True'
+
 HUGGINGFACE_API_KEY = os.getenv('HUGGINGFACE_API_KEY')
+
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
