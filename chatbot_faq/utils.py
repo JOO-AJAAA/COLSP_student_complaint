@@ -79,7 +79,7 @@ def generate_response_huggingface(prompt):
         api_key = getattr(settings, 'GEMINI_API_KEY', None)
         client = genai.Client(api_key=api_key)
         respone = client.models.generate_content(
-            model="gemini-2.5-pro",
+            model="gemini-2.5-flash",
             contents=prompt,
         )
         if respone.text:

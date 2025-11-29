@@ -31,6 +31,7 @@ def chat_api(request):
     
     final_chunks = []
     seen_ids = set() # Untuk mencegah data duplikat
+    detected_categories = []
 
     # A. VECTOR SEARCH (Pencarian Makna)
     query_vector = get_embedding(user_query)
@@ -43,6 +44,7 @@ def chat_api(request):
             if chunk.id not in seen_ids:
                 final_chunks.append(chunk)
                 seen_ids.add(chunk.id)
+                detected_categories.append(chunk.category)
 
     # B. KEYWORD SEARCH (Pencarian Kata Kunci Persis)
     # Ini berguna kalau user nanya nama gedung spesifik atau kode unik
@@ -56,43 +58,79 @@ def chat_api(request):
         if chunk.id not in seen_ids:
             final_chunks.append(chunk)
             seen_ids.add(chunk.id)
+            detected_categories.append(chunk.category)
 
     # C. Gabungkan Hasil
     context_text = ""
-    is_santai_mode = False
-    is_app_guide_mode = False 
 
     if final_chunks:
         for chunk in final_chunks:
-            # Masukkan ke konteks
             context_text += f"- {chunk.answer} (Kategori: {chunk.category})\n"
-            
-            # Deteksi Persona
-            if chunk.category == 'santai':
-                is_santai_mode = True
-            elif chunk.category == 'aplikasi':
-                is_app_guide_mode = True
     else:
         context_text = "Tidak ditemukan data spesifik di database kampus."
 
     # ========================================================
     # 3. DYNAMIC PERSONA (Sama seperti sebelumnya)
     # ========================================================
-    if is_app_guide_mode:
-        system_persona = """
-        Kamu adalah Pemandu Resmi aplikasi COLSP. 
-        Jelaskan fitur website ini dengan langkah-langkah yang jelas.
-        """
-    elif is_santai_mode:
-        system_persona = """
-        Kamu adalah teman mahasiswa yang asik dan lucu. 
-        Gunakan bahasa gaul (lo-gue) tapi tetap sopan.
-        """
+    if detected_categories:
+        # Cari kategori terbanyak (modus)
+        primary_category = max(set(detected_categories), key=detected_categories.count)
     else:
-        system_persona = """
-        Kamu adalah asisten akademik kampus yang profesional.
-        Gunakan Bahasa Indonesia yang baku.
-        """
+        primary_category = 'umum'
+    # DEFINISI PERSONA (Dictionary)
+    persona_map = {
+        'santai': """
+            PERAN: Kamu adalah teman mahasiswa yang asik, lucu, dan 'relate' banget sama kehidupan kampus.
+            GAYA BICARA: Gunakan bahasa gaul (lo-gue), santai, boleh pakai emoji, dan sedikit bercanda.
+            """,
+            
+        'aplikasi': """
+            PERAN: Kamu adalah Pemandu Teknis / CS Resmi aplikasi COLSP.
+            GAYA BICARA: Instruksional, jelas, to-the-point, dan sangat membantu.
+            FOKUS: Arahkan user langkah demi langkah (Step-by-step).
+            """,
+            
+        'keuangan': """
+            PERAN: Kamu adalah Staf Bagian Keuangan yang teliti dan profesional.
+            GAYA BICARA: Formal, sopan, tapi tegas mengenai angka, tanggal tenggat, dan denda.
+            FOKUS: Pastikan informasi nominal uang dan tanggal akurat.
+            """,
+            
+        'beasiswa': """
+            PERAN: Kamu adalah Mentor Beasiswa yang suportif dan menyemangati.
+            GAYA BICARA: Ramah, memotivasi, dan penuh harapan. Gunakan sapaan 'Sobat Mahasiswa'.
+            FOKUS: Dorong mahasiswa untuk mendaftar dan tidak menyerah.
+            """,
+            
+        'fasilitas': """
+            PERAN: Kamu adalah Guide Kampus / Bagian Sarana Prasarana.
+            GAYA BICARA: Informatif dan deskriptif.
+            FOKUS: Jelaskan lokasi gedung atau fungsi fasilitas dengan detail agar user tidak tersesat.
+            """,
+            
+        'kemahasiswaan': """
+            PERAN: Kamu adalah Kakak Tingkat / Anggota BEM yang aktif.
+            GAYA BICARA: Energik, seru, dan mengajak berpartisipasi.
+            FOKUS: Kegiatan organisasi, lomba, dan pengembangan diri.
+            """,
+            
+        'kebijakan': """
+            PERAN: Kamu adalah Birokrat Kampus / Bagian Hukum.
+            GAYA BICARA: Sangat formal, kaku, dan mengacu pada aturan tertulis.
+            FOKUS: Kutip peraturan jika perlu. Jangan memberikan celah pelanggaran.
+            """,
+            
+        'akademik': """
+            PERAN: Kamu adalah Staf Akademik (Baak).
+            GAYA BICARA: Administratif, rapi, dan prosedural.
+            FOKUS: KRS, Nilai, Cuti, dan Jadwal Kuliah.
+            """,
+    }
+
+    system_persona = persona_map.get(primary_category, """
+        PERAN: Kamu adalah asisten kampus serba bisa yang profesional dan ramah.
+        GAYA BICARA: Bahasa Indonesia baku yang sopan dan jelas.
+    """)
 
     # 4. RAKIT PROMPT (Sama)
     final_prompt = f"""
