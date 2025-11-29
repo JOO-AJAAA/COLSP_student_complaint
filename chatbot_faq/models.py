@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
-from pgvector.django import VectorField
+from pgvector.django import VectorField,HnswIndex
 # Import fungsi dari utils di bawah
 from .utils import get_embedding 
 
@@ -40,7 +40,18 @@ class KnowledgeChunk(models.Model):
     
     # 5. VECTOR FIELD
     embedding = VectorField(dimensions=1024, null=True, blank=True)
-    
+
+    class Meta:
+        indexes = [
+            # Tambahkan Index HNSW untuk kolom embedding
+            HnswIndex(
+                name='knowledge_chunk_vec_index',
+                fields=['embedding'],
+                m=16,
+                ef_construction=64,
+                opclasses=['vector_cosine_ops'] # Optimasi untuk Cosine Similarity
+            )
+        ]
     created_at = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):

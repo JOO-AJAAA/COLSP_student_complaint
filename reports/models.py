@@ -34,6 +34,18 @@ class Report(models.Model):
     class Meta:
         ordering = ['-created_at']
 
+    def get_status_color(self):
+        """
+        Mengembalikan class CSS Bootstrap berdasarkan status.
+        Menggunakan style 'Subtle' (Background pudar, Teks tebal) agar elegan.
+        """
+        colors = {
+            'pending': 'bg-warning bg-opacity-50 text-warning border-warning',
+            'verified': 'bg-success bg-opacity-50 text-success border-success',
+            'rejected': 'bg-danger bg-opacity-50 text-danger border-danger',
+        }
+        # Default ke abu-abu jika status tidak dikenali
+        return colors.get(self.status, 'bg-secondary-subtle text-secondary-emphasis border-secondary')
     def __str__(self):
         return f"{self.title} - {self.author.username}"
 

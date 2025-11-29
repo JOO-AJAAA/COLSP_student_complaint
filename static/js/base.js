@@ -329,7 +329,11 @@ if (window.__colsp_base_js_loaded) {
     // --- 7. REACTION LOGIC ---
     function submitReaction(reportId, emojiType, btnElement) {
       const btn = typeof btnElement === "string" ? document.querySelector(btnElement) : btnElement;
+      if (btn.disabled) return;
       
+      btn.disabled = true;
+      btn.style.opacity = "0.5";
+      btn.style.cursor = "wait"; // Ubah kursor jadi jam pasir
       // URL Report Reaction
       const url = `/reports/api/reaction/${reportId}/`;
 
@@ -369,7 +373,14 @@ if (window.__colsp_base_js_loaded) {
           }
           if (btn) btn.classList.toggle("active");
       })
-      .catch((err) => console.error("Reaction error", err));
+      .catch((err) => console.error("Reaction error", err))
+      .finally(() => {
+        if (btn) {
+          btn.disabled = false;
+          btn.style.opacity = "1";
+          btn.style.cursor = "pointer";
+        }
+      });
     }
 
 
@@ -498,7 +509,7 @@ if (window.__colsp_base_js_loaded) {
     (function() {
         const bubble = document.getElementById('chat-welcome-bubble');
         const textElement = document.getElementById('typewriter-text');
-        const message = "Bingung soal UKT atau Fasilitas? Tanya aku di sini!";
+        const message = "Bingung soal UKT atau Fasilitas atau lainya? Tanya aku di sini!";
         
         if (!bubble || !textElement) return;
 

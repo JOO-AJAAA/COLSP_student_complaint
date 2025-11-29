@@ -15,8 +15,6 @@ STATUS_CHOICES = [
     ('pending', 'Waiting for Verification'),
     ('verified', 'Verified'),
     ('rejected', 'Rejected'),
-    ('in_progress', 'In Progress'),
-    ('resolved', 'Resolved'),
 ]
 
 REACTION_CHOICES = [

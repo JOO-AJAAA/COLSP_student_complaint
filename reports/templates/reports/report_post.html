@@ -35,9 +35,10 @@
                 </a>
             </h6>
 
-            <span class="badge rounded-pill bg-dark-subtle text-body-secondary border border-secondary border-opacity-25" style="font-size: 0.7rem; font-weight: 500;">
-                {{ report.get_status_display }}
-            </span>
+          <span class="badge rounded-pill border {{ report.get_status_color }} border-opacity-25" 
+                      style="font-size: 0.7rem; font-weight: 600; letter-spacing: 0.5px;">
+            {{ report.get_status_display }}
+          </span>
         </div>
 
         <div class="small text-secondary mt-1 text-truncate">

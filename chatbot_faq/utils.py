@@ -57,8 +57,6 @@ def get_embedding(text):
                     if isinstance(data, list):
                         if len(data) > 0 and isinstance(data[0], list): return data[0]
                     return data
-                    return None
-                
                 elif response.status_code == 503:
                     time.sleep(5)
                     continue
