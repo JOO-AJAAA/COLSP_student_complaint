@@ -1,13 +1,12 @@
 import requests
 import time
 from django.conf import settings
-
+from google import genai
+from google.genai import types
 # --- KONFIGURASI FINAL ---
 
-# 1. LLM: Qwen 2.5 (Sangat Pintar & Logis)
-HF_CHAT_URL = "https://router.huggingface.co/v1/chat/completions"
-# Kita pakai model 72B (paling pintar) atau 7B (lebih cepat)
-HF_MODEL_ID = "Qwen/Qwen2.5-72B-Instruct"
+# --- KONFIGURASI GEMINI ---
+
 
 # 2. EMBEDDING (GANTI KE MULTILINGUAL E5)
 # Model ini support Bahasa Indonesia dan outputnya 768 dimensi (Aman untuk DB Anda)
@@ -46,7 +45,7 @@ def get_embedding(text):
             
             # MODEL LOADING (503)
             elif response.status_code == 503:
-                wait = response.json().get('estimated_time', 10)
+                wait = response.json().get('estimated_time', 5)
                 print(f"🔄 Embedding API Loading... Tunggu {wait}s")
                 time.sleep(wait)
                 continue
@@ -61,41 +60,22 @@ def get_embedding(text):
             return None
     return None
 
-# --- FUNGSI CHAT BARU (QWEN) ---
+# --- FUNGSI CHAT BARU (GEMINI) ---
 def generate_response_huggingface(prompt):
-    """
-    Menggunakan Endpoint Chat Completions (OpenAI Style).
-    Lebih stabil dan pintar.
-    """
+# Nama fungsinya biarkan 'generate_response_huggingface' 
+    # supaya kita gak perlu ubah views.py, padahal isinya Gemini :D
     
-    # Payload standar OpenAI/Qwen
-    payload = {
-        "model": HF_MODEL_ID,
-        "messages": [
-            {"role": "user", "content": prompt}
-        ],
-        "max_tokens": 512,
-        "temperature": 0.7,
-        "stream": False # Matikan stream biar bisa disimpan ke DB
-    }
-
-    for attempt in range(3):
-        try:
-            response = requests.post(HF_CHAT_URL, headers=headers, json=payload, timeout=60)
-            
-            if response.status_code == 200:
-                result = response.json()
-                # Ambil text dari struktur JSON OpenAI
-                return result['choices'][0]['message']['content'].strip()
-            
-            elif response.status_code == 503: # Loading
-                continue
-            
-            else:
-                print(f"❌ Qwen Error {response.status_code}: {response.text}")
-                return f"Maaf, server AI sedang sibuk ({response.status_code})."
-
-        except Exception as e:
-            print(f"⚠️ Qwen Connection Error: {e}")
-            
-    return "Maaf, Qwen sedang tidak bisa dihubungi."
+    try:
+        api_key = getattr(settings, 'GEMINI_API_KEY', None)
+        client = genai.Client(api_key=api_key)
+        respone = client.models.generate_content(
+            model="gemini-2.5-pro",
+            contents=prompt,
+        )
+        if respone.text:
+            return respone.text.strip()
+        else:
+            return "Maaf, saya tidak dapat memberikan jawaban saat ini."
+    except Exception as e:
+        print(f"⚠️ Gemini API Error: {e,settings.GEMINI_API_KEY}")
+        return "Maaf, terjadi kesalahan saat memproses permintaan Anda."

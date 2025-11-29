@@ -101,6 +101,9 @@ def chat_api(request):
     
     INSTRUKSI: Jawab pertanyaan user berdasarkan KONTEKS DATA berikut. Jika tidak ada info yang relevan,
     katakan "Maaf, saya tidak memiliki informasi tersebut.". Tapi tetap berikan jawaban yang membantu dan ramah.
+    Kalau memang tidak tahu, jangan jawab saja menggunakan apa yang kamu ingat dari luar konteks. tapi jangan jadikan
+    itu sebagai sumber utama jawabanmu. Kasihan usernya nanti kalau kamu jawab tidak tahu, tapi jawab seenaknya dari ingatanmu sendiri. dan
+    beri informasi yang relevan juga dari konteks pertanyaan dia. Jangan buat-buat informasi yang tidak ada di konteks. Gunakan bahasa yang sesuai dengan persona di atas.
     
     KONTEKS DATA KAMPUS:
     {context_text}
