@@ -124,11 +124,11 @@ def submit_report_api(request):
 
     submit_count = cache.get(cache_key, 0)
 
-    if submit_count >= 3:
+    if submit_count >= 1:
         return JsonResponse({
             'status': 'rejected',
             'reason': 'rate_limit',
-            'message': 'Anda hanya boleh mengirim 3 laporan dalam 5 menit.'
+            'message': 'Sistem spam lagi tahap pengembangan. Untuk saat ini, mohon batasi pengiriman laporan menjadi 1 kali setiap 5 menit.'
         }, status=429)
 
     # -------------------------------
@@ -275,13 +275,16 @@ def toggle_reaction_api(request, report_id):
             if existing.type == rtype:
                 # Jika tipe sama -> Hapus (Unlike)
                 existing.delete()
+                action = 'removed'
             else:
                 # Jika tipe beda -> Ganti
                 existing.type = rtype
                 existing.save()
+                action = 'updated'
         else:
             # Belum ada -> Buat baru
             Reaction.objects.create(user=request.user, report=report, type=rtype)
+            action = 'created'
 
         # 5. Hitung Ulang Jumlah (Agar UI Update Realtime)
         # Kita hitung manual dari DB agar akurat
@@ -302,7 +305,8 @@ def toggle_reaction_api(request, report_id):
         total_reactions = reactions.count()
 
         return JsonResponse({
-            'status': 'success', 
+            'status': 'success',
+            'action': action,
             'counts': counts,
             'total_reactions': total_reactions
         })

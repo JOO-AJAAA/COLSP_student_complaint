@@ -489,6 +489,18 @@ textarea.form-control {
   align-items: center;
   gap: 6px;
   transition: all 0.15s ease;
+  box-shadow: none !important; 
+  outline: none !important;
+}
+
+
+.btn-reaction:focus,
+.btn-reaction:active,
+.btn-reaction:focus-visible {
+    border-color: transparent !important;
+    outline: none !important;
+    box-shadow: none !important;
+    background-color: rgba(255, 255, 255, 0.05); /* Efek tekan halus */
 }
 .btn-reaction:hover {
   background: rgba(255, 255, 255, 0.03);

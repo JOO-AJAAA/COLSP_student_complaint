@@ -154,7 +154,7 @@ SOCIALACCOUNT_PROVIDERS = {
             'access_type': 'online',
             'prompt': 'select_account',
         },
-        
+        'EMAIL_AUTHENTICATION': True,
         'SCOPE': [
             'profile',
             'email',
@@ -190,3 +190,10 @@ CACHES = {
         'LOCATION': BASE_DIR / 'cache'
     }
 }
+
+# 1. Biarkan Allauth membuat akun otomatis tanpa tanya user
+ACCOUNT_LOGIN_METHODS = {'email'}
+ACCOUT_EMAIL_REQUIRED = True
+SOCIALACCOUNT_AUTO_SIGNUP = True
+ACCOUNT_EMAIL_VERIFICATION = 'none'
+SOCIAL_ACCOUNT_EMAIL_VERIFICATION = 'none'

@@ -329,8 +329,9 @@ if (window.__colsp_base_js_loaded) {
     // --- 7. REACTION LOGIC ---
     function submitReaction(reportId, emojiType, btnElement) {
       const btn = typeof btnElement === "string" ? document.querySelector(btnElement) : btnElement;
+      const actualBtn = btn.closest('button');
       if (btn.disabled) return;
-      
+      actualBtn.style.opacity = "0.7";
       btn.disabled = true;
       btn.style.opacity = "0.5";
       btn.style.cursor = "wait"; // Ubah kursor jadi jam pasir
@@ -359,8 +360,20 @@ if (window.__colsp_base_js_loaded) {
             console.error("Reaction failed", data);
             return;
           }
+          const parentDiv = actualBtn.parentElement;
+          const siblings = parentDiv.querySelectorAll('.btn-reaction');
 
-          // Update UI
+          siblings.forEach(b => {
+              b.classList.remove('active');
+              // Opsional: Hapus style inline jika ada sisa
+              b.style.opacity = "1";
+          });
+
+          // 4. SET ACTIVE BARU (Hanya jika action bukan 'removed')
+          if (data.action === 'created' || data.action === 'updated') {
+              actualBtn.classList.add('active');
+          }
+          // === UPDATE ANGKA ===
           if (data && data.counts) {
             Object.keys(data.counts).forEach((k) => {
               const el = document.getElementById(`count-${k}-${reportId}`);
@@ -371,15 +384,11 @@ if (window.__colsp_base_js_loaded) {
                 totalEl.textContent = data.total_reactions;
             }
           }
-          if (btn) btn.classList.toggle("active");
       })
-      .catch((err) => console.error("Reaction error", err))
+      .catch((err) => console.error("Network error", err))
       .finally(() => {
-        if (btn) {
-          btn.disabled = false;
-          btn.style.opacity = "1";
-          btn.style.cursor = "pointer";
-        }
+          // Buka kunci visual
+          if(actualBtn) actualBtn.style.opacity = "1";
       });
     }
 
