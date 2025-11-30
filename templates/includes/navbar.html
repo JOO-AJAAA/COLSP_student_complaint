@@ -8,7 +8,7 @@
         </button>
         {% if user.is_authenticated %}
         <h6 title="{{user.username}}" class="theme-indicator ms-2" id="themeIndicator">
-          {{ user.username|truncatechars:12 }}
+          {{ user.first_name|default:user.username|truncatechars:12 }}
         </h6>
         {% endif %}
       </div>

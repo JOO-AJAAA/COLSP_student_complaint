@@ -11,7 +11,7 @@ class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     is_guest = models.BooleanField(default=False)
     avatar_animal = models.CharField(max_length=50, blank=True, null=True)
-
+    avatar_image = models.ImageField(upload_to='profile_avatars/', blank=True, null=True)
     def __str__(self):
         return self.user.username
 

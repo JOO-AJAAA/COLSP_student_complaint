@@ -9,16 +9,10 @@
                 <div class="card-body text-center p-4">
                     
                     <div class="mb-3 position-relative d-inline-block">
-                        {% if profile_user.socialaccount_set.count %}
-                            <img src="{{ profile_user.socialaccount_set.all.0.get_avatar_url }}" class="rounded-circle border border-2 border-success" style="width: 120px; height: 120px; object-fit: cover;user-select: none;" alt="{{ profile_user.username }} avatar" draggable="false">
-                        {% elif profile_user.profile.avatar_animal %}
-                            <img src="{% static 'account/img/' %}{{ profile_user.profile.avatar_animal }}.svg" class="rounded-circle border border-2 border-success p-2 bg-light" style="width: 120px; height: 120px; object-fit: cover;user-select: none;" alt="{{ profile_user.username }} avatar" draggable="false">
-                        {% else %}
-                            <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center mx-auto" style="width: 120px; height: 120px; font-size: 3rem;">
-                                {{ profile_user.username|slice:":1"|upper }}
-                            </div>
-                        {% endif %}
-                        
+                        <img id="avatar-preview" 
+                            src="{% if user.profile.avatar_image %}{{ user.profile.avatar_image.url }}{% else %}/static/account/img/bebek.svg{% endif %}" 
+                            class="rounded-circle border border-2 border-success object-fit-cover" 
+                            style="width: 100px; height: 100px;">
                         {% if not profile_user.profile.is_guest %}
                         <span class="position-absolute bottom-0 end-0 badge rounded-pill bg-success border border-dark">
                             Verified <i class="fas fa-check-circle ms-1"></i>
@@ -29,8 +23,12 @@
                         </span>
                         {% endif %}
                     </div>
-
-                    <h4 class="fw-bold mb-1">{{ profile_user.username }}</h4>
+                    <h4 class="fw-bold mb-1">{{ profile_user.first_name|default:profile_user.username }}</h4>
+                    {% if is_me and not user.profile.is_guest %}
+                        <button class="btn btn-sm btn-outline-secondary rounded-pill mt-2" data-bs-toggle="modal" data-bs-target="#editProfileModal">
+                            <i class="fas fa-pen me-1"></i> Edit Profile
+                        </button>
+                    {% endif %}
                     {% if is_me %}
                     <p class="small">{{ profile_user.email|default:"No email linked" }}</p>
                     {% endif %}
@@ -82,6 +80,116 @@
 
     </div>
 </div>
+<div class="modal fade" id="editProfileModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-card border-secondary text-primary"> <div class="modal-header border-secondary">
+                <h5 class="modal-title">Edit Profil</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="edit-profile-form">
+                    <div class="text-center mb-4">
+                        <div class="position-relative d-inline-block">
+                            <img id="avatar-preview" 
+                                src="{% if user.profile.avatar_image %}{{ user.profile.avatar_image.url }}{% else %}https://via.placeholder.com/100{% endif %}" 
+                                class="rounded-circle border border-2 border-success object-fit-cover" 
+                                style="width: 100px; height: 100px;">
+                            
+                            <label for="avatar-input" class="position-absolute bottom-0 end-0 bg-dark text-white rounded-circle p-2 cursor-pointer shadow" style="cursor: pointer;">
+                                <i class="fas fa-camera fa-sm"></i>
+                            </label>
+                            <input type="file" id="avatar-input" name="avatar" class="d-none" accept="image/*">
+                        </div>
+                        <div class="small text-muted mt-2">Klik ikon kamera untuk ganti foto</div>
+                    </div>
 
+                    <div class="mb-3">
+                        <label class="form-label">Display Name</label>
+                        <input type="text" name="display_name" class="form-control bg-dark text-white border-secondary" value="{{ user.first_name|default:user.username }}">
+                        <div class="form-text text-secondary">Nama ini akan muncul di laporan Anda.</div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-success" onclick="submitProfileUpdate()">Simpan Perubahan</button>
+            </div>
+        </div>
+    </div>
+</div>
 {% include 'includes/sidebar.html' %}
+{% endblock %}
+{% block logic_script_page %}
+<script>
+    // 1. Preview Gambar
+    const avatarInput = document.getElementById('avatar-input');
+    const avatarPreview = document.getElementById('avatar-preview');
+
+    if (avatarInput && avatarPreview) {
+        avatarInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    avatarPreview.src = e.target.result;
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+
+    // 2. Submit Profile
+    window.submitProfileUpdate = function() {
+        const form = document.getElementById('edit-profile-form');
+        const formData = new FormData(form);
+        
+        // Ambil CSRF Token Manual
+        let csrftoken = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, 10) === ('csrftoken=')) {
+                    csrftoken = decodeURIComponent(cookie.substring(10));
+                    break;
+                }
+            }
+        }
+
+        const btn = document.querySelector('#editProfileModal .btn-success');
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+
+        // URL YANG BENAR:
+        fetch('/api/auth/update-profile/', { 
+            method: 'POST',
+            headers: { 'X-CSRFToken': csrftoken },
+            body: formData
+        })
+        .then(async res => {
+            // Cek jika response bukan JSON (misal 404 HTML)
+            const contentType = res.headers.get("content-type");
+            if (!contentType || !contentType.includes("application/json")) {
+                throw new Error("URL Salah (404 Not Found) atau Server Error");
+            }
+            return res.json();
+        })
+        .then(data => {
+            if (data.status === 'success') {
+                window.location.reload();
+            } else {
+                alert('Gagal: ' + data.message);
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert('Error: URL API tidak ditemukan. Cek urls.py Anda.');
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        });
+    }
+</script>
 {% endblock %}

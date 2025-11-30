@@ -8,37 +8,53 @@ from .models import OTPRequest
 from reports.models import Report
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
-from django.db.models import Count 
+
+
+def get_avatar_url(user):
+    """
+    Menentukan URL avatar berdasarkan prioritas:
+    1. Upload Manual (avatar_image)
+    2. Google (SocialAccount)
+    3. Hewan (Guest)
+    """
+    avatar_url = ''
+    try:
+        prof = getattr(user, 'profile', None)
+        
+        # PRIORITAS 1: Cek Upload Manual
+        if prof and prof.avatar_image:
+            return prof.avatar_image.url
+            
+        # PRIORITAS 2: Cek Google Social Account
+        try:
+            from allauth.socialaccount.models import SocialAccount
+            sa = SocialAccount.objects.filter(user=user).first()
+            if sa:
+                extra = getattr(sa, 'extra_data', {}) or {}
+                # Google biasanya simpan di 'picture'
+                return extra.get('picture') or extra.get('avatar_url') or ''
+        except ImportError:
+            pass
+            
+        # PRIORITAS 3: Cek Avatar Hewan (Guest)
+        if prof and prof.avatar_animal:
+            return f"/static/account/img/{prof.avatar_animal}.svg"
+            
+    except Exception:
+        pass
+        
+    return avatar_url
 
 # Helper function agar kita tidak menulis ulang logika avatar berulang kali
 def attach_report_metadata(report_list):
-    try:
-        from allauth.socialaccount.models import SocialAccount
-    except ImportError:
-        SocialAccount = None
-
     for r in report_list:
         # 1. Logika Nama
         author_name = r.author.get_full_name() or r.author.username
-        
-        # 2. Logika Avatar
-        avatar_url = ''
-        try:
-            prof = getattr(r.author, 'profile', None)
-            if prof and getattr(prof, 'avatar_animal', None):
-                avatar_url = f"/static/account/img/{prof.avatar_animal}.svg"
-        except Exception:
-            pass
-
-        if not avatar_url and SocialAccount:
-            sa = SocialAccount.objects.filter(user=r.author).first()
-            if sa:
-                extra = getattr(sa, 'extra_data', {}) or {}
-                avatar_url = extra.get('picture') or extra.get('avatar_url') or ''
+        author_avatar_url = get_avatar_url(r.author)
 
         # Tempel atribut ke objek report (PENTING!)
         setattr(r, 'author_display_name', author_name)
-        setattr(r, 'author_avatar_url', avatar_url)
+        setattr(r, 'author_avatar_url', author_avatar_url)
         
         # 3. Logika Reaction Counts (Karena models.py property dihapus)
         # Ambil semua reaction dari prefetch (pastikan view memanggil prefetch)
@@ -209,3 +225,37 @@ def verify_otp_view(request):
     except Exception as e:
         print(f"ERROR SYSTEM: {e}")
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+@login_required
+@require_POST
+def update_profile_api(request):
+    user = request.user
+    
+    # Security: Guest Murni (Belum verify) gak boleh edit
+    if user.profile.is_guest:
+        return JsonResponse({'status': 'error', 'message': 'Verifikasi dulu bro!'}, status=403)
+
+    # 1. Update Display Name
+    display_name = request.POST.get('display_name')
+    if display_name:
+        user.first_name = display_name
+        user.save()
+
+    # 2. Update Foto Profil
+    if 'avatar' in request.FILES:
+        profile = user.profile
+        
+        # Hapus foto lama jika ada (biar hemat storage)
+        if profile.avatar_image:
+            profile.avatar_image.delete(save=False) # save=False biar gak query db 2x
+        
+        # SIMPAN FOTO BARU
+        profile.avatar_image = request.FILES['avatar']
+        
+        # --- TAMBAHAN: HAPUS JEJAK HEWAN ---
+        # Karena sudah punya foto asli, kita hapus hewannya
+        profile.avatar_animal = None 
+        
+        profile.save()
+
+    return JsonResponse({'status': 'success', 'message': 'Profil berhasil diperbarui!'})

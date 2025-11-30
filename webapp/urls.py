@@ -11,10 +11,10 @@ urlpatterns = [
     path('accounts/', include('allauth.urls')),
     # Reports pages and API
     path('reports/', include('reports.urls')),
-    path('api/profiles/', include('profiles.urls')),
     path('profile/', account_views.profile_view, name='profile'),
     path('profile/<str:username>/', account_views.public_profile_view, name='public_profile'),
     path('chatbot-faq/', include('chatbot_faq.urls')),
+    path('api/auth/', include('profiles.urls')),
 ]
 
 if settings.DEBUG:
