@@ -9,10 +9,15 @@
                 <div class="card-body text-center p-4">
                     
                     <div class="mb-3 position-relative d-inline-block">
-                        <img id="avatar-preview" 
-                            src="{% if user.profile.avatar_image %}{{ user.profile.avatar_image.url }}{% else %}/static/account/img/bebek.svg{% endif %}" 
+                        {% if profile_user.profile.avatar_image %}
+                        <img src="{{ profile_user.profile.avatar_image.url }}" 
                             class="rounded-circle border border-2 border-success object-fit-cover" 
                             style="width: 100px; height: 100px;">
+                        {% else %}
+                        <img src="{% static 'account/img/' %}{{ profile_user.profile.avatar_animal }}.svg" 
+                            class="rounded-circle border border-2 border-success object-fit-cover" 
+                            style="width: 100px; height: 100px; background-color: #f0f0f0; padding: 4px;">
+                        {% endif %}
                         {% if not profile_user.profile.is_guest %}
                         <span class="position-absolute bottom-0 end-0 badge rounded-pill bg-success border border-dark">
                             Verified <i class="fas fa-check-circle ms-1"></i>

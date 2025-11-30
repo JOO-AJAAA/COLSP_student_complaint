@@ -9,3 +9,5 @@ media/
 .vscode/
 migrations/
 cache/
+_PIPELINE_INPUT/
+chatbot_faq/managemnet/

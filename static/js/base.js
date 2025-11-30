@@ -221,7 +221,7 @@ if (window.__colsp_base_js_loaded) {
           btn.textContent = "Mengirim...";
       }
       
-      fetch("/api/profiles/request-otp/", {
+      fetch("/api/auth/request-otp/", {
         method: "POST",
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
@@ -265,7 +265,7 @@ if (window.__colsp_base_js_loaded) {
           btn.textContent = "Memverifikasi...";
       }
       
-      fetch("/api/profiles/verify-otp/", {
+      fetch("/api/auth/verify-otp/", {
         method: "POST",
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
