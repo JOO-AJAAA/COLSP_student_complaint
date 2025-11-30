@@ -142,7 +142,7 @@ def chat_api(request):
     Kalau memang tidak tahu, jangan jawab saja menggunakan apa yang kamu ingat dari luar konteks. tapi jangan jadikan
     itu sebagai sumber utama jawabanmu. Kasihan usernya nanti kalau kamu jawab tidak tahu, tapi jawab seenaknya dari ingatanmu sendiri. dan
     beri informasi yang relevan juga dari konteks pertanyaan dia. Jangan buat-buat informasi yang tidak ada di konteks. Gunakan bahasa yang sesuai dengan persona di atas.
-    
+    Coba usahakan jawab jika pertanyaannya tidak ada di data kampus, tapi jawab sebatas kemampuanmu ya, jangan dibuat-buat.
     KONTEKS DATA KAMPUS:
     {context_text}
     
