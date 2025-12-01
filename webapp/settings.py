@@ -210,17 +210,17 @@ SOCIALACCOUNT_AUTO_SIGNUP = True
 ACCOUNT_EMAIL_VERIFICATION = 'none'
 SOCIAL_ACCOUNT_EMAIL_VERIFICATION = 'none'
 
+
 # settings.py
 
-# 1. PENTING: Beritahu Django kalau Vercel sudah menangani HTTPS
-# Tanpa baris ini, CSRF akan selalu gagal di Vercel
+# Agar Django percaya kalau Vercel sudah pakai HTTPS
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-
-# 2. Pengaturan HTTPS standar
 SECURE_SSL_REDIRECT = True
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 
+# Daftar domain yang boleh akses (Ganti dengan domain Vercel kamu yang asli)
 CSRF_TRUSTED_ORIGINS = [
     'https://colsp.vercel.app', 
+    'https://colsp-student-complaint.vercel.app', 
 ]
