@@ -8,42 +8,7 @@ from .models import OTPRequest
 from reports.models import Report
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
-
-
-def get_avatar_url(user):
-    """
-    Menentukan URL avatar berdasarkan prioritas:
-    1. Upload Manual (avatar_image)
-    2. Google (SocialAccount)
-    3. Hewan (Guest)
-    """
-    avatar_url = ''
-    try:
-        prof = getattr(user, 'profile', None)
-        
-        # PRIORITAS 1: Cek Upload Manual
-        if prof and prof.avatar_image:
-            return prof.avatar_image.url
-            
-        # PRIORITAS 2: Cek Google Social Account
-        try:
-            from allauth.socialaccount.models import SocialAccount
-            sa = SocialAccount.objects.filter(user=user).first()
-            if sa:
-                extra = getattr(sa, 'extra_data', {}) or {}
-                # Google biasanya simpan di 'picture'
-                return extra.get('picture') or extra.get('avatar_url') or ''
-        except ImportError:
-            pass
-            
-        # PRIORITAS 3: Cek Avatar Hewan (Guest)
-        if prof and prof.avatar_animal:
-            return f"/static/account/img/{prof.avatar_animal}.svg"
-            
-    except Exception:
-        pass
-        
-    return avatar_url
+from .utils import get_avatar_url
 
 # Helper function agar kita tidak menulis ulang logika avatar berulang kali
 def attach_report_metadata(report_list):

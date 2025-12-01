@@ -75,3 +75,28 @@ def send_otp_email(email_tujuan):
     except Exception as e:
         print(f"🔥 Gagal mengirim OTP: {e}")
         return False
+
+def get_avatar_url(user):
+    try:
+        # Cek Profile
+        prof = getattr(user, 'profile', None)
+        
+        # PRIORITAS 1: Foto Upload Manual
+        if prof and prof.avatar_image:
+            return prof.avatar_image.url
+            
+        # PRIORITAS 2: Google Social Account
+        # Kita import di dalam fungsi agar aman
+        from allauth.socialaccount.models import SocialAccount
+        sa = SocialAccount.objects.filter(user=user).first()
+        if sa:
+            return sa.get_avatar_url()
+            
+        # PRIORITAS 3: Avatar Hewan
+        if prof and prof.avatar_animal:
+            return f"/static/account/img/{prof.avatar_animal}.svg"
+            
+    except Exception:
+        pass
+        
+    return ""

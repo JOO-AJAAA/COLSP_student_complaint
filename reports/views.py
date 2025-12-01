@@ -13,6 +13,7 @@ from .utils import (
     detect_image_vulgarity, 
     extract_text_from_document
 )
+from profiles.utils import get_avatar_url
 # Import Utility Baru
 from .gemini_utils import generate_report_metadata
 # Create your views here.
@@ -40,20 +41,7 @@ def reports(request):
     for r in page_obj: # Loop hanya berjalan 6 kali
         # --- A. Logic Avatar ---
         author_name = r.author.get_full_name() or r.author.username
-        avatar_url = ''
-        
-        try:
-            prof = getattr(r.author, 'profile', None)
-            if prof and getattr(prof, 'avatar_animal', None):
-                avatar_url = f"/static/account/img/{prof.avatar_animal}.svg"
-        except Exception:
-            pass
-
-        if not avatar_url and SocialAccount:
-            sa = SocialAccount.objects.filter(user=r.author).first()
-            if sa:
-                extra = getattr(sa, 'extra_data', {}) or {}
-                avatar_url = extra.get('picture') or extra.get('avatar_url') or ''
+        avatar_url = get_avatar_url(r.author)
 
         setattr(r, 'author_display_name', author_name)
         setattr(r, 'author_avatar_url', avatar_url)
