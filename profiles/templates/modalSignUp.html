@@ -1,9 +1,11 @@
+{% load static %}
 {% if not user.is_authenticated %}
 <div id="auth-overlay" class="auth-overlay" aria-hidden="false">
   <div class="auth-modal">
     <button id="auth-close" class="auth-close" aria-label="Close">
       &times;
     </button>
+    <img src="{% static 'img/logo_icon.svg' %}" class="mb-3 logo-spin-hover" width="80">
     <h3>Welcome to COLSP</h3>
     <p>Sign up or log in to personalize your experience.</p>
     <div
