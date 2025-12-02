@@ -50,7 +50,7 @@ Follow these steps to run the project on your computer:
 
 1.  **Clone Repository**
     ```bash
-    git clone [https://github.com/name_repositort/colsp.git](https://github.com/username-anda/colsp.git)
+    git clone [https://github.com/JOO-AJAAA/COLSP_student_complaint](https://github.com/JOO-AJAAA/COLSP_student_complaint)
     cd colsp
     ```
 
@@ -80,6 +80,11 @@ Follow these steps to run the project on your computer:
     python manage.py runserver
     ```
     Buka `http://127.0.0.1:8000` di browser.
+
+7. **Use link(in github have link web)**
+    ```
+    [https://github.com/JOO-AJAAA/COLSP_student_complaint](https://github.com/JOO-AJAAA/COLSP_student_complaint)
+    ```
 
 ---
 
