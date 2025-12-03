@@ -7,7 +7,6 @@ from deep_translator import GoogleTranslator
 from django.conf import settings
 
 headers = {"Authorization": f"Bearer {settings.HUGGINGFACE_API_KEY}"}
-print(headers)
 
 def translate_to_english(text):
     """
@@ -55,32 +54,16 @@ def detect_gambling_probability(text):
     return 0.0
 
 def detect_toxicity_probability(text):
+    """
+    Returns a float (0.0 to 1.0) representing how toxic the text is.
+    """
     if not text: return 0.0
-    
-    try:
-        response = requests.post(HF_API_URL_TOXIC, headers=headers, json={"inputs": text}, timeout=10)
-        data = response.json()
-
-        # 2. Cek Error API
-        if isinstance(data, dict) and 'error' in data:
-            print(f"⚠️ Toxic API Error: {data['error']}")
-            return 0.0
-
-        # 3. Ambil skor tertinggi dari label negatif
-        # Model toxic biasanya mengembalikan multi-label (toxic, insult, obscene, dll)
-        top_score = 0.0
-        if isinstance(data, list) and len(data) > 0:
-            for item in data[0]:
-                if item['score'] > top_score:
-                    top_score = item['score']
-            
-            print(f"Toxic Score: {top_score}")
-            return top_score
-
-    except Exception as e:
-        print(f"❌ Toxic Check Error: {e}")
-
-    return 0.0
+    english_text = translate_to_english(text)
+    respone = requests.post(HF_API_URL_TOXIC, headers=headers, json={"inputs": english_text})
+    data = respone.json()
+    scoreToxic = data[0][0]['score']
+    print(f"toxicty probabilty score {scoreToxic}")
+    return scoreToxic
 
 def detect_image_vulgarity(image_file):
     """
