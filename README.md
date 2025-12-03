@@ -81,9 +81,9 @@ Follow these steps to run the project on your computer:
     ```
     Buka `http://127.0.0.1:8000` di browser.
 
-7. **Use link(in github have link web)**
+7. **Use link**
     ```
-    [https://github.com/JOO-AJAAA/COLSP_student_complaint](https://github.com/JOO-AJAAA/COLSP_student_complaint)
+    [colsp.vercel.app](colsp.vercel.app)
     ```
 
 ---

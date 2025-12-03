@@ -24,28 +24,63 @@ def translate_to_english(text):
         return text # Fallback: return the original text if it fails
 
 def detect_gambling_probability(text):
-    """
-    Returns a float (0.0 to 1.0) representing the probability of the text being spam/gambling.
-    """
     if not text: return 0.0
-    english_text = translate_to_english(text)
-    response = requests.post(HF_API_URL_SPAM, headers=headers, json={"inputs": english_text})
-    data = response.json()
-    scoreGambling = data[0][1]['score']
-    print(f"Gambling score {scoreGambling}")
-    return scoreGambling
+    
+    # 1. Gambling WAJIB Translate (Karena modelnya English)
+    try:
+        english_text = translate_to_english(text)
+    except:
+        english_text = text # Fallback
+    try:
+        response = requests.post(HF_API_URL_SPAM, headers=headers, json={"inputs": english_text}, timeout=10)
+        data = response.json()
+
+        # 2. Cek Error API
+        if isinstance(data, dict) and 'error' in data:
+            print(f"⚠️ Gambling API Error: {data['error']}")
+            return 0.0
+
+        # 3. Cari Label 'SPAM' atau 'LABEL_1' dengan Looping (JANGAN HARDCODE INDEX)
+        if isinstance(data, list) and len(data) > 0:
+            # Data biasanya list of list: [[{'label': 'HAM', 'score':..}, ...]]
+            for item in data[0]:
+                label = item['label'].upper()
+                if label == 'SPAM' or label == 'LABEL_1':
+                    print(f"Gambling Score: {item['score']}")
+                    return item['score']
+                    
+    except Exception as e:
+        print(f"❌ Gambling Check Error: {e}")
+        
+    return 0.0
 
 def detect_toxicity_probability(text):
-    """
-    Returns a float (0.0 to 1.0) representing how toxic the text is.
-    """
     if not text: return 0.0
-    english_text = translate_to_english(text)
-    respone = requests.post(HF_API_URL_TOXIC, headers=headers, json={"inputs": english_text})
-    data = respone.json()
-    scoreToxic = data[0][0]['score']
-    print(f"toxicty probabilty score {scoreToxic}")
-    return scoreToxic
+    
+    try:
+        response = requests.post(HF_API_URL_TOXIC, headers=headers, json={"inputs": text}, timeout=10)
+        data = response.json()
+
+        # 2. Cek Error API
+        if isinstance(data, dict) and 'error' in data:
+            print(f"⚠️ Toxic API Error: {data['error']}")
+            return 0.0
+
+        # 3. Ambil skor tertinggi dari label negatif
+        # Model toxic biasanya mengembalikan multi-label (toxic, insult, obscene, dll)
+        top_score = 0.0
+        if isinstance(data, list) and len(data) > 0:
+            for item in data[0]:
+                if item['score'] > top_score:
+                    top_score = item['score']
+            
+            print(f"Toxic Score: {top_score}")
+            return top_score
+
+    except Exception as e:
+        print(f"❌ Toxic Check Error: {e}")
+
+    return 0.0
 
 def detect_image_vulgarity(image_file):
     """
